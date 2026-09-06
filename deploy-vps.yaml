@@ -16,11 +16,15 @@ services:
       context: ./fixguard/backend
     restart: unless-stopped
     environment:
-      FIXGUARD_API_KEY: ${FIXGUARD_API_KEY:?set FIXGUARD_API_KEY in .env}
+      FIXGUARD_API_KEY: ${FIXGUARD_API_KEY}
       # The dashboard is served from the same origin, so nothing is really
       # cross-origin. Kept accurate anyway in case that ever changes.
-      CORS_ORIGINS: ${PUBLIC_BASE_URL:?set PUBLIC_BASE_URL in .env}
+      CORS_ORIGINS: ${PUBLIC_BASE_URL}
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
+      # Where an embedded badge fetches its score from. Left unset it falls
+      # back to localhost, and every badge on a customer's site then calls
+      # the visitor's own machine.
+      API_PUBLIC_URL: ${PUBLIC_BASE_URL}
       MAX_CONCURRENT_AUDITS: "1"
       AUDIT_HARD_TIMEOUT_S: "90"
       FIXGUARD_DATA_DIR: /data
@@ -68,7 +72,7 @@ services:
       - traefik.docker.network=coolify
       - traefik.http.services.fixguard.loadbalancer.server.port=80
 
-      - traefik.http.routers.fixguard.rule=Host(`${FIXGUARD_DOMAIN:?set FIXGUARD_DOMAIN in .env}`)
+      - traefik.http.routers.fixguard.rule=Host(`${FIXGUARD_DOMAIN}`)
       - traefik.http.routers.fixguard.entrypoints=https
       - traefik.http.routers.fixguard.tls=true
       - traefik.http.routers.fixguard.tls.certresolver=letsencrypt

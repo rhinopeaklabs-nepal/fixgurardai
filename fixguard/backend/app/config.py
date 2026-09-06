@@ -24,6 +24,33 @@ PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://localhost:5173").rstrip("
 # Public base URL of this API, used by the embeddable badge script.
 API_PUBLIC_URL = os.getenv("API_PUBLIC_URL", "http://127.0.0.1:8000").rstrip("/")
 
+
+def _require_url(name: str, value: str) -> str:
+    """Refuse to start on a base URL that is not one.
+
+    These two values are pasted into share links, PDF footers and the badge
+    script that customers embed on their own sites, and nothing downstream
+    checks them - a wrong value produces links that look plausible and go
+    nowhere. It also decides whether the session cookie is marked Secure.
+
+    This exists because the compose files used ${VAR:?message}, which Docker
+    Compose treats as "fail if unset" and Coolify treats as a default. The
+    deploy succeeded with PUBLIC_BASE_URL literally set to the error message,
+    and stayed that way: every share link was broken, the badge pointed at
+    127.0.0.1, and the cookie lost its Secure flag - all silently, because
+    a string is a string. Failing at boot is loud, and loud is recoverable.
+    """
+    if not value.startswith(("http://", "https://")):
+        raise RuntimeError(
+            f"{name} must be a full URL starting with http:// or https:// - "
+            f"got {value!r}. Set it in the deployment's environment."
+        )
+    return value
+
+
+_require_url("PUBLIC_BASE_URL", PUBLIC_BASE_URL)
+_require_url("API_PUBLIC_URL", API_PUBLIC_URL)
+
 # Single shared demo key for the hackathon build. Rotate before any public use.
 API_KEY = os.getenv("FIXGUARD_API_KEY", "fixguard-dev-key")
 

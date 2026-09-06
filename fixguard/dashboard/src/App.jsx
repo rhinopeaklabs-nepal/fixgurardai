@@ -8,7 +8,6 @@ import Compare from "./pages/Compare";
 import Architecture from "./pages/Architecture";
 import SharedReport from "./pages/SharedReport";
 import SignIn from "./pages/SignIn";
-import Landing from "./pages/Landing";
 import { AuthProvider, useAuth } from "./lib/auth";
 
 export default function App() {
@@ -21,26 +20,21 @@ export default function App() {
 
 function Shell() {
   const location = useLocation();
-  const { status } = useAuth();
 
   // The public report is standalone: a client following a shared link has no
   // account here and should not see the owner's navigation, or be asked to
   // sign in to read a report that was deliberately shared with them.
   const isPublic = location.pathname.startsWith("/r/");
   const isSignIn = location.pathname === "/signin";
-  // The landing page brings its own header, with the calls to action a
-  // signed-out visitor needs. Showing the app navigation above it would
-  // offer four links that all bounce straight back to the sign-in screen.
-  const isLanding = location.pathname === "/" && status !== "signed-in";
 
   return (
     <>
-      {!isPublic && !isSignIn && !isLanding && <Nav />}
+      {!isPublic && !isSignIn && <Nav />}
       <Routes>
         <Route path="/r/:token" element={<SharedReport />} />
         <Route path="/signin" element={<SignedOutOnly><SignIn /></SignedOutOnly>} />
 
-        <Route path="/" element={<HomeOrLanding />} />
+        <Route path="/" element={<RequireAuth><Home /></RequireAuth>} />
         <Route path="/a/:id" element={<RequireAuth><AuditDetail /></RequireAuth>} />
         <Route path="/a/:id/compare" element={<RequireAuth><Compare /></RequireAuth>} />
         <Route path="/prompts" element={<RequireAuth><PromptStudio /></RequireAuth>} />
@@ -51,20 +45,6 @@ function Shell() {
       </Routes>
     </>
   );
-}
-
-/**
- * The root path serves two different pages depending on who is asking.
- *
- * A signed-out visitor gets the landing page rather than a redirect to the
- * sign-in screen: being asked to create an account before being told what the
- * thing does is the fastest way to lose somebody who arrived from a link. A
- * signed-in one gets straight to the tool, with no marketing in the way.
- */
-function HomeOrLanding() {
-  const { status } = useAuth();
-  if (status === "checking") return <Waiting />;
-  return status === "signed-in" ? <Home /> : <Landing />;
 }
 
 /**

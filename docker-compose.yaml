@@ -14,12 +14,16 @@ services:
       context: ./fixguard/backend
     restart: unless-stopped
     environment:
-      FIXGUARD_API_KEY: ${FIXGUARD_API_KEY:?set FIXGUARD_API_KEY in Coolify}
+      FIXGUARD_API_KEY: ${FIXGUARD_API_KEY}
       # Same-origin, so nothing is ever actually cross-origin. The variable is
       # required by the app, and pointing it at the site's own domain keeps it
       # correct if the dashboard is ever served from somewhere else.
-      CORS_ORIGINS: ${PUBLIC_BASE_URL:?set PUBLIC_BASE_URL in Coolify}
+      CORS_ORIGINS: ${PUBLIC_BASE_URL}
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
+      # Where an embedded badge fetches its score from. Left unset it falls
+      # back to localhost, and every badge on a customer's site then calls
+      # the visitor's own machine.
+      API_PUBLIC_URL: ${PUBLIC_BASE_URL}
       MAX_CONCURRENT_AUDITS: "1"
       AUDIT_HARD_TIMEOUT_S: "90"
       FIXGUARD_DATA_DIR: /data

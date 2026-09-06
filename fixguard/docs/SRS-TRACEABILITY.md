@@ -226,15 +226,15 @@ Error envelope per 8.3, with every spec code implemented plus
 | Product | SRS role | Status |
 |---|---|---|
 | AI Builder | Marketing site, lead capture, intake | **Not started.** Zero websites exist on the account; verified via the Hostinger API. |
-| Web Hosting | Dashboard SPA, report pages | **Not used, by decision.** The plan is provisioned and holds no site. Everything is served from the VPS instead — see the divergence note below. |
+| Web Hosting | Dashboard SPA, report pages | **Landing page instead.** `deploy/landing/index.html` is a standalone static page whose intake form hands a URL to the dashboard. The dashboard and reports stay on the VPS — see the divergence note. |
 | VPS | Playwright, API, database | **Live** at https://fixguardai.online — engine, database, dashboard and TLS |
 | AI Agents | Log parsing, prompt generation, summaries | **Built** — deterministic engines, optional model |
 
 **Be precise about the removal test in a pitch.** Three products carry load
 once the AI Builder page exists: the VPS runs everything, the agents produce
 the explanations and prompts, and AI Builder is the front door that hands a
-URL to the dashboard. Web Hosting carries nothing, and that is a choice rather
-than an omission - stated plainly on the architecture page in the product.
+URL to the dashboard. Web Hosting carries the public landing page and the intake form that starts
+the journey - static, so it stays up even while the engine is redeploying.
 
 The challenge asks entrants to *build using* the four products; the stricter
 runtime-interdependence framing is SRS 9.2's own, written before the split was
@@ -298,4 +298,4 @@ marketing document.
 | 3.2: authentication out of scope | Accounts, sessions, per-user ownership | The alternative was one visitor seeing another's list of audited sites |
 | 10.4: "public-facing pages only — no authenticated/login-gated site testing" | Session-handoff auditing behind a login | Requested, and built without ever handling a password. The SRS sentence predates the feature |
 | 11.3: `/architecture` shows the 4-product diagram | It shows the *audited* site, with the 4-product diagram on a second tab | Mapping the audited site turned out to be one of the most useful outputs. The SRS item is met by the tab |
-| 9.1: Web Hosting serves the dashboard and report pages | Everything is served from the VPS | One origin, one certificate, and no cross-origin session to keep working. The split was designed and then dropped: it moved static files onto a second machine and bought the product nothing, at the cost of a shared-domain cookie, a second certificate and CORS. Web Hosting therefore holds nothing, and the architecture page says so rather than claiming otherwise |
+| 9.1: Web Hosting serves the dashboard and report pages | It serves the public landing page; the dashboard and reports stay on the VPS | Splitting the *dashboard* across two machines needed a shared-domain cookie, a second certificate and CORS, and bought nothing. Splitting the *landing page* costs none of that - it is static and calls no API - and gains something real: the public face stays up while the engine is redeployed |
