@@ -342,3 +342,66 @@ fixes them as a side effect. So this prompt does both.
 Re-run the audit afterwards. The score moving from 76 with accessibility at 0
 to something higher, on the tool's own marketing site, is a stronger demo than
 any screenshot.
+
+---
+
+## Step 8 — fix the focus and the missing sections
+
+Measured on the live site, 6 September:
+
+- The page is **10,126px tall across four sections** — each one runs 2,000 to
+  3,000px, two to three full screens per section. The reader scrolls through
+  empty space between every idea.
+- The hero input is **308px wide** with background `#FDFCFA` on a `#FDFCFA`
+  card and a `#E7E1D8` hairline border. It is the same colour as the thing it
+  sits on. The single most important control on the site does not read as a
+  control.
+- **"Thanks!" is no longer its own element**, so it lost the pass-green. That
+  word carrying the green while the sentence says it sent nothing was the
+  whole point of the headline.
+- The **stat band is missing** and there is **no "how it works" summary** on
+  the home page.
+- One real contrast failure remains: brand blue `#0037FF` on the dark band at
+  **2.55:1**.
+
+> Keep all copy, all links and all page structure exactly as they are. Fix the
+> following.
+>
+> **Tighten the vertical rhythm.** Every section is currently two to three
+> screens tall. Cut section padding to 96px top and bottom on desktop and 64px
+> on mobile, and cut the gaps between elements inside each section by roughly
+> half. The whole home page should land near 5,000px, not 10,000px. Nothing is
+> removed - the same content sits closer together.
+>
+> **Make the hero input unmistakably the main control:**
+> - Give it a white background against the warm panel, not the panel's own
+>   colour, and a 2px border in `#C9C2B8`.
+> - Widen it to fill the available column, at least 420px on desktop.
+> - Height 56px, font size 17px.
+> - On focus: border `#0055FF` and a 4px ring of `#0055FF` at 18% opacity.
+> - Put the button immediately beside it as one joined control group, with no
+>   gap between the field and the button.
+> - Add a subtle label above it in the ink colour, not muted grey.
+>
+> **Restore the green on "Thanks!"** Wrap that one word in its own element
+> coloured `#059669`. Everything else in the headline stays ink.
+>
+> **Add the stat band** directly below the hero, three tiles across, the
+> middle one filled `#0055FF` with white text:
+> - "29s" — average full audit, seven checks, one real browser
+> - "49 to 97" — one test site, after four scoped prompts
+> - "0" — invented numbers in any report
+>
+> **Add a "How it works" summary to the home page**, between the three
+> failures section and "What you walk away with". Four numbered steps in one
+> row, numbers in monospace inside circles, one line of text each:
+> 1. Paste your address
+> 2. A real browser opens it and submits your forms
+> 3. You get a score with the evidence behind every finding
+> 4. Each finding becomes a prompt you paste back
+>
+> End it with a link to the full How it works page.
+>
+> **Fix the contrast failure.** On the dark `#0F1729` band, the accent blue is
+> unreadable at 2.55:1. Use `#7FA5FF` for accent text on dark backgrounds.
+> Keep `#0055FF` on light backgrounds, where it is fine.
