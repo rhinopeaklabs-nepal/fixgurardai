@@ -455,7 +455,7 @@ async def delete_my_account(
     counts = db.delete_everything_for(who["owner_id"])
     db.delete_account(who["user"]["id"])
     accounts.end_session(request.cookies.get(auth.COOKIE))
-    response.delete_cookie(auth.COOKIE, path="/")
+    response.delete_cookie(auth.COOKIE, **auth._cookie_kwargs())
     return {"deleted_account": True, **counts}
 
 

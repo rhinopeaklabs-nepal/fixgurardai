@@ -27,6 +27,12 @@ API_PUBLIC_URL = os.getenv("API_PUBLIC_URL", "http://127.0.0.1:8000").rstrip("/"
 # Single shared demo key for the hackathon build. Rotate before any public use.
 API_KEY = os.getenv("FIXGUARD_API_KEY", "fixguard-dev-key")
 
+# Set when the dashboard and the API are served from different subdomains of
+# one site - ".example.com" makes the session cookie valid for both. Left
+# empty the cookie is host-only, which is correct and safer for a same-origin
+# deployment, so this is opt-in rather than derived.
+SESSION_COOKIE_DOMAIN = os.getenv("SESSION_COOKIE_DOMAIN", "").strip()
+
 # --- Audit engine limits -------------------------------------------------
 # Tuned for a 1 vCPU / 4 GB VPS: one browser at a time, hard ceilings on time.
 MAX_CONCURRENT_AUDITS = int(os.getenv("MAX_CONCURRENT_AUDITS", "1"))

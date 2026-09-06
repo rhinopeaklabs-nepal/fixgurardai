@@ -44,6 +44,19 @@ def _secure_cookies() -> bool:
     return str(config.PUBLIC_BASE_URL or "").startswith("https://")
 
 
+def _cookie_kwargs() -> dict:
+    """Shared by the set and the delete, so a session can always be cleared.
+
+    A cookie set with a Domain can only be removed by a delete carrying the
+    same Domain. Building both from one place is what stops sign-out silently
+    leaving the cookie in place on a subdomain deployment.
+    """
+    kw = {"path": "/"}
+    if config.SESSION_COOKIE_DOMAIN:
+        kw["domain"] = config.SESSION_COOKIE_DOMAIN
+    return kw
+
+
 def _issue(response: Response, user_id: str) -> None:
     token, expires = accounts.start_session(user_id)
     response.set_cookie(
@@ -51,9 +64,12 @@ def _issue(response: Response, user_id: str) -> None:
         token,
         httponly=True,
         secure=_secure_cookies(),
+        # Lax is enough even with the dashboard and the API on different
+        # subdomains: they share a registrable domain, so a call between them
+        # is same-site. None would be needed only for genuinely cross-site.
         samesite="lax",
         max_age=accounts.SESSION_DAYS * 24 * 3600,
-        path="/",
+        **_cookie_kwargs(),
     )
 
 
@@ -95,7 +111,7 @@ async def login(payload: LoginRequest, response: Response) -> dict:
 @router.post("/logout")
 async def logout(request: Request, response: Response) -> dict:
     accounts.end_session(request.cookies.get(COOKIE))
-    response.delete_cookie(COOKIE, path="/")
+    response.delete_cookie(COOKIE, **_cookie_kwargs())
     return {"signed_out": True}
 
 

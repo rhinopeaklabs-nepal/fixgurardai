@@ -81,9 +81,16 @@ function RequireAuth({ children }) {
 
   if (status === "checking") return <Waiting />;
   if (status === "signed-out") {
-    // Carry the intended destination so signing in lands where they meant to
-    // go, rather than dumping everyone on the home page.
-    return <Navigate to="/signin" replace state={{ from: location.pathname }} />;
+    // Carry the whole destination, search string included. Keeping only the
+    // path silently drops ?url=, which is how a visitor handed over from the
+    // marketing page would have to retype the address they just typed there.
+    return (
+      <Navigate
+        to="/signin"
+        replace
+        state={{ from: location.pathname + location.search }}
+      />
+    );
   }
   return children;
 }

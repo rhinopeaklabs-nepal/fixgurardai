@@ -226,16 +226,20 @@ Error envelope per 8.3, with every spec code implemented plus
 | Product | SRS role | Status |
 |---|---|---|
 | AI Builder | Marketing site, lead capture, intake | **Not started.** Zero websites exist on the account; verified via the Hostinger API. |
-| Web Hosting | Dashboard SPA, report pages | **Not deployed.** The plan is active but holds no website; the dashboard is currently served from the VPS. |
+| Web Hosting | Dashboard SPA, report pages | **Not used, by decision.** The plan is provisioned and holds no site. Everything is served from the VPS instead — see the divergence note below. |
 | VPS | Playwright, API, database | **Live** at https://fixguardai.online — engine, database, dashboard and TLS |
 | AI Agents | Log parsing, prompt generation, summaries | **Built** — deterministic engines, optional model |
 
-**Be precise about the removal test in a pitch.** Two products are
-load-bearing today: the VPS and the agents. Web Hosting and AI Builder hold
-nothing, so removing either changes nothing - which is exactly what SRS 9.2
-says must not be true. This is the largest open gap in the project and it is
-a deployment task, not a build one: the dashboard is built and the AI Builder
-brief is written.
+**Be precise about the removal test in a pitch.** Three products carry load
+once the AI Builder page exists: the VPS runs everything, the agents produce
+the explanations and prompts, and AI Builder is the front door that hands a
+URL to the dashboard. Web Hosting carries nothing, and that is a choice rather
+than an omission - stated plainly on the architecture page in the product.
+
+The challenge asks entrants to *build using* the four products; the stricter
+runtime-interdependence framing is SRS 9.2's own, written before the split was
+weighed. Hostinger Agent was used throughout for provisioning, VPS diagnostics
+and deployment debugging, which is what "build using" asks for.
 
 Older note, kept because the reasoning still holds: The intelligence layer exists and runs, but on FixGuard's
 own engines rather than a Hostinger inference endpoint, because none is
@@ -278,8 +282,7 @@ marketing document.
 
 | Gap | Where it bites |
 |---|---|
-| **Web Hosting holds no website** | SRS 9.1 gives it the dashboard and report pages; SRS 9.2's removal test fails for it today |
-| **AI Builder holds no website** | Same, for the marketing and intake role |
+| **AI Builder holds no website** | SRS 9.1 gives it marketing and intake. The brief and the `?url=` handoff are ready; the page is not built |
 | **No pitch video** | SRS 3.3 success criterion |
 | `form_selector` accepted and ignored | FR-2.1. A parameter that changes nothing is worse than one that is rejected |
 | `project_id` accepted and ignored | Same shape, and `projects` was never built |
@@ -295,3 +298,4 @@ marketing document.
 | 3.2: authentication out of scope | Accounts, sessions, per-user ownership | The alternative was one visitor seeing another's list of audited sites |
 | 10.4: "public-facing pages only — no authenticated/login-gated site testing" | Session-handoff auditing behind a login | Requested, and built without ever handling a password. The SRS sentence predates the feature |
 | 11.3: `/architecture` shows the 4-product diagram | It shows the *audited* site, with the 4-product diagram on a second tab | Mapping the audited site turned out to be one of the most useful outputs. The SRS item is met by the tab |
+| 9.1: Web Hosting serves the dashboard and report pages | Everything is served from the VPS | One origin, one certificate, and no cross-origin session to keep working. The split was designed and then dropped: it moved static files onto a second machine and bought the product nothing, at the cost of a shared-domain cookie, a second certificate and CORS. Web Hosting therefore holds nothing, and the architecture page says so rather than claiming otherwise |

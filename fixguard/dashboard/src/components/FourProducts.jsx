@@ -28,11 +28,11 @@ const PRODUCTS = [
   {
     key: "hosting",
     name: "Web Hosting",
-    role: "Dashboard and reports",
+    role: "Not used",
     detail:
-      "The React dashboard, audit reports and the public shared-report pages.",
-    removal: "No interface and no shareable reports. The product is unusable.",
-    accent: "#7c3aed",
+      "The plan is provisioned but holds no site. The dashboard and the reports are served from the VPS instead, so that one machine owns the whole request path and there is no cross-origin session to keep working.",
+    removal: "Nothing changes today. This is the one product carrying no load.",
+    accent: "#64748b",
   },
   {
     key: "builder",
@@ -69,7 +69,7 @@ export default function FourProducts() {
   // observe, so it is stated rather than asserted as verified.
   const status = {
     vps: health === false ? "down" : health ? "live" : "checking",
-    hosting: "served-from-vps",
+    hosting: "unused",
     builder: "not-deployed",
     agents: agents ? "live" : health ? "live" : "checking",
   };
@@ -106,15 +106,16 @@ export default function FourProducts() {
         ))}
       </div>
 
-      <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
-        <strong>Where things actually run today.</strong> The audit engine and
-        the database are on the VPS, and that is also where this dashboard is
-        being served from — so Web Hosting is not yet carrying the role above,
-        and nothing is deployed to AI Builder. The agents run on their
-        deterministic engines
+      <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-relaxed text-slate-700">
+        <strong>Where things actually run.</strong> The engine, the database
+        and this dashboard are all on the VPS. Keeping them on one machine
+        means one origin, one certificate and no cross-origin session to keep
+        working — the alternative split was possible and bought nothing the
+        product needed. The agents run on their deterministic engines
         {agents?.llm_configured ? `, with ${agents.provider} refining them` : ""}
         , because Hostinger&rsquo;s builder AI is an assistant inside its own
-        interface with no endpoint a backend can call.
+        interface with no endpoint a backend can call. Saying otherwise would
+        be the one overclaim in this project that is trivial to disprove.
       </p>
     </div>
   );
@@ -125,7 +126,7 @@ function StatusPill({ state }) {
     live: ["bg-emerald-100 text-emerald-700", "Live"],
     down: ["bg-red-100 text-red-700", "Not responding"],
     checking: ["bg-slate-100 text-slate-500", "Checking…"],
-    "served-from-vps": ["bg-amber-100 text-amber-800", "Running on the VPS"],
+    unused: ["bg-slate-100 text-slate-500", "Not used"],
     "not-deployed": ["bg-slate-100 text-slate-500", "Not deployed"],
   };
   const [cls, label] = map[state] || map.checking;
@@ -140,12 +141,15 @@ function StatusPill({ state }) {
 
 /** The request path, drawn once rather than described four times. */
 function Pipeline() {
+  // The path as it actually runs, not as it was planned. Drawing Web Hosting
+  // in two of these boxes while the cards below say it holds nothing would
+  // make the diagram contradict the page it is on.
   const steps = [
     ["AI Builder", "Visitor gives a URL", "#059669"],
-    ["Web Hosting", "Dashboard starts the audit", "#7c3aed"],
-    ["VPS", "Chromium opens the site", "#0055FF"],
+    ["VPS", "Dashboard receives it and starts the audit", "#0055FF"],
+    ["VPS", "Chromium opens the site and submits its forms", "#0055FF"],
     ["AI Agents", "Findings become plain English", "#d97706"],
-    ["Web Hosting", "Report, PDF, shareable link", "#7c3aed"],
+    ["VPS", "Report, PDF, shareable link", "#0055FF"],
   ];
   return (
     <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-5">

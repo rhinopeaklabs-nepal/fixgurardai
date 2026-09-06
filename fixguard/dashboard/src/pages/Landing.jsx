@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 /**
  * The public landing page.
@@ -11,15 +11,22 @@ import { Link } from "react-router-dom";
  * screen.
  */
 export default function Landing() {
+  // A visitor sent here from the marketing page arrives with their address in
+  // the query string. Signing up has to carry it through, or they type it a
+  // second time and the handoff was for nothing.
+  const [params] = useSearchParams();
+  const handedOver = (params.get("url") || "").trim();
+  const next = handedOver ? `/?url=${encodeURIComponent(handedOver)}` : "/";
+
   return (
     <div className="min-h-screen bg-white">
-      <Header />
-      <Hero />
+      <Header next={next} />
+      <Hero next={next} handedOver={handedOver} />
       <Failures />
       <HowItWorks />
       <Deliverables />
       <Limits />
-      <FinalCta />
+      <FinalCta next={next} />
       <Footer />
     </div>
   );
@@ -27,7 +34,7 @@ export default function Landing() {
 
 /* ------------------------------------------------------------------ header */
 
-function Header() {
+function Header({ next = "/" }) {
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-3.5">
@@ -37,13 +44,14 @@ function Header() {
         <nav className="ml-auto flex items-center gap-1">
           <Link
             to="/signin"
+            state={{ from: next }}
             className="rounded-lg px-3.5 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
           >
             Sign in
           </Link>
           <Link
             to="/signin"
-            state={{ mode: "signup" }}
+            state={{ mode: "signup", from: next }}
             className="rounded-lg bg-brand px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-dark"
           >
             Create account
@@ -56,7 +64,7 @@ function Header() {
 
 /* -------------------------------------------------------------------- hero */
 
-function Hero() {
+function Hero({ next = "/", handedOver = "" }) {
   return (
     <section className="relative overflow-hidden border-b border-slate-200">
       {/* A faint measurement grid, because this is an instrument. Masked so it
@@ -98,13 +106,25 @@ function Hero() {
             network to see whether anything actually left the page.
           </p>
 
+          {/* Say the address back. Somebody handed over from the marketing
+              page has already typed it once and needs to see it survived,
+              otherwise the next screen asking for it again reads as a bug. */}
+          {handedOver && (
+            <p className="mt-6 inline-block rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+              Ready to audit{" "}
+              <span className="font-mono font-medium text-slate-900">
+                {handedOver.replace(/^https?:\/\//, "")}
+              </span>
+            </p>
+          )}
+
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <Link
               to="/signin"
-              state={{ mode: "signup" }}
+              state={{ mode: "signup", from: next }}
               className="rounded-xl bg-brand px-6 py-3.5 font-semibold text-white shadow-sm transition hover:bg-brand-dark"
             >
-              Audit my site
+              {handedOver ? "Create account and run it" : "Audit my site"}
             </Link>
             <Link
               to="/signin"
@@ -476,7 +496,7 @@ function Limits() {
 
 /* --------------------------------------------------------------------- cta */
 
-function FinalCta() {
+function FinalCta({ next = "/" }) {
   return (
     <section className="border-b border-slate-200 bg-slate-50">
       <div className="mx-auto max-w-3xl px-6 py-20 text-center">
@@ -489,7 +509,7 @@ function FinalCta() {
         </p>
         <Link
           to="/signin"
-          state={{ mode: "signup" }}
+          state={{ mode: "signup", from: next }}
           className="mt-8 inline-block rounded-xl bg-brand px-8 py-4 font-semibold text-white shadow-sm transition hover:bg-brand-dark"
         >
           Create your account

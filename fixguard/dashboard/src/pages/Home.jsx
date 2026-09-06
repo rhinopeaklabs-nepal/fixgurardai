@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ALL_MODULES, MODULE_LABELS, api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 
@@ -37,7 +37,14 @@ const PAGE_CHOICES = [
 ];
 
 export default function Home() {
-  const [url, setUrl] = useState("");
+  // The marketing page on AI Builder hands a site over as ?url=, so somebody
+  // who typed their address there does not have to type it again here. That
+  // handoff is the only thing making AI Builder part of the request path
+  // rather than a brochure beside it.
+  const [params] = useSearchParams();
+  const handedOver = (params.get("url") || "").trim().slice(0, 2048);
+
+  const [url, setUrl] = useState(handedOver);
   const [consent, setConsent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [modules, setModules] = useState(ALL_MODULES);
@@ -106,8 +113,9 @@ export default function Home() {
             {firstName ? `Run an audit, ${firstName}` : "Run an audit"}
           </h1>
           <p className="mt-1 text-slate-600">
-            One address. FixGuard opens it in a real browser and reports what
-            actually happens.
+            {handedOver
+              ? "Your address is filled in below. Confirm you own it and press Run audit."
+              : "One address. FixGuard opens it in a real browser and reports what actually happens."}
           </p>
         </div>
         <QuotaMeter quota={quota} />
