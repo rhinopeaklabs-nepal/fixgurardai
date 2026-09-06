@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand: #0055ff;
+  --color-brand-dark: #0044cc;
+  --color-ink: #0d1117;
+  --color-ink-soft: #4b5563;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: #f6f7fb;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+@keyframes pulse-ring {
+  0%   { opacity: .55; transform: scale(.97); }
+  50%  { opacity: 1;   transform: scale(1); }
+  100% { opacity: .55; transform: scale(.97); }
+}
+.animate-ring { animation: pulse-ring 1.6s ease-in-out infinite; }

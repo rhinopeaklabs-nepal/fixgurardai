@@ -1,0 +1,63 @@
+<!doctype html>
+<!-- No lang attribute: screen readers guess the language. -->
+<html>
+<head>
+<meta charset="utf-8">
+<!-- Viewport blocks pinch-zoom, which people with low vision rely on. -->
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Bella's Bakery - Gallery</title>
+<style>
+  body{font-family:system-ui,sans-serif;margin:0;padding:2rem;color:#111}
+  nav a{margin-right:1rem}
+  /* Fixed width forces sideways scrolling on a phone. */
+  .wide-banner{width:900px;background:#0055FF;color:#fff;padding:1rem;
+               border-radius:8px;margin:1rem 0}
+  /* Grey on white: about 2.3:1, well under the 4.5:1 minimum. */
+  .faint{color:#b9b9b9}
+  .tiny{font-size:10px;color:#888}
+  .icon-link{display:inline-block;padding:2px 4px}
+  form{border:1px solid #ddd;border-radius:8px;padding:1rem;max-width:420px}
+  input{width:100%;padding:.5rem;margin-bottom:.75rem;box-sizing:border-box}
+</style>
+</head>
+<body>
+  <nav>
+    <a href="/">Contact</a><a href="/good.html">Order</a>
+    <a href="/rerender.html">Menu</a><a href="/broken-ui.html">Gallery</a>
+  </nav>
+
+  <h1>Our cakes</h1>
+  <!-- Heading level jumps h1 -> h4, breaking the outline. -->
+  <h4>Recent bakes</h4>
+
+  <!-- Images with no alt text. -->
+  <img src="/assets/cake-1.jpg" width="120" height="90">
+  <img src="/assets/cake-2.jpg" width="120" height="90">
+
+  <div class="wide-banner">
+    This banner is a fixed 900px wide, so the whole page scrolls sideways
+    on a phone.
+  </div>
+
+  <p class="faint">
+    This paragraph is light grey on white. It is readable on a good monitor in
+    a dark room, and close to invisible on a phone in daylight.
+  </p>
+
+  <p class="tiny">Terms apply. Prices exclude delivery.</p>
+
+  <!-- A link whose only content is an image with no alt: announced as "link". -->
+  <a class="icon-link" href="/good.html"><img src="/assets/cart.svg" width="16" height="16"></a>
+
+  <form>
+    <h4>Join our mailing list</h4>
+    <!-- Input with no label, no aria-label, no title. -->
+    <input type="email" name="email" placeholder="Email address">
+    <button type="submit">Sign up</button>
+  </form>
+
+  <!-- Duplicate id breaks every label-for and aria reference to it. -->
+  <span id="promo">Summer offer</span>
+  <span id="promo">Winter offer</span>
+</body>
+</html>

@@ -1,0 +1,37 @@
+# FixGuard AI - VPS stack (Hostinger VPS KVM 1: 1 vCPU / 4 GB).
+# Two services only. Redis and a separate worker container were cut because a
+# single vCPU cannot run them alongside Chromium without swapping.
+
+services:
+  api:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      FIXGUARD_API_KEY: ${FIXGUARD_API_KEY:?set FIXGUARD_API_KEY in .env}
+      CORS_ORIGINS: ${CORS_ORIGINS:?set CORS_ORIGINS in .env}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?set PUBLIC_BASE_URL in .env}
+      MAX_CONCURRENT_AUDITS: "1"
+      AUDIT_HARD_TIMEOUT_S: "90"
+      FIXGUARD_DATA_DIR: /data
+    volumes:
+      - fixguard-data:/data
+    # Chromium is memory-hungry; cap it so a runaway page cannot OOM the host.
+    mem_limit: 2500m
+    shm_size: 1gb
+    expose:
+      - "8000"
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/fixguard.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+
+volumes:
+  fixguard-data:

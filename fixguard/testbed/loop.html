@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bella's Bakery - Loop demo</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{font-family:system-ui,sans-serif;max-width:640px;margin:0 auto;padding:2rem}</style>
+</head>
+<body>
+  <h1>Redirect loop demo</h1>
+  <p>This page reproduces the client-side navigation loop that AI Builder
+     React sites hit, the one that makes Chromium print
+     "Throttling navigation to prevent the browser from hanging".</p>
+
+<script>
+  // Mirrors a useEffect that redirects on every render without a guard.
+  let n = 0;
+  const bounce = () => {
+    n += 1;
+    history.pushState({}, '', '/loop.html?r=' + n);
+    location.replace('/loop.html?r=' + n);
+  };
+  setInterval(bounce, 120);
+  bounce();
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bella's Bakery - Order (working)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  body{font-family:system-ui,sans-serif;max-width:640px;margin:0 auto;padding:2rem;color:#1a1a2e}
+  form{border:1px solid #ddd;border-radius:10px;padding:1.25rem;margin:1.5rem 0}
+  label{display:block;font-size:.85rem;font-weight:600;margin:.75rem 0 .25rem}
+  input,textarea{width:100%;padding:.6rem;border:1px solid #ccc;border-radius:6px;font:inherit;box-sizing:border-box}
+  button{margin-top:1rem;background:#0055FF;color:#fff;border:0;padding:.7rem 1.4rem;border-radius:6px;font-weight:600;cursor:pointer}
+  .ok{display:none;margin-top:1rem;padding:.75rem;background:#e6f7ed;color:#0a6b3d;border-radius:6px;font-weight:600}
+  nav a{margin-right:1rem}
+</style>
+</head>
+<body>
+  <nav>
+    <a href="/">Contact</a><a href="/good.html">Order</a>
+    <a href="/rerender.html">Menu</a><a href="/missing.html">Gift cards</a>
+  </nav>
+  <h1>Place an order</h1>
+
+  <!-- Control case: this form actually posts and shows confirmation.
+       FixGuard must score this one as passing, or the detector is useless. -->
+  <form id="order">
+    <h3>Order form</h3>
+    <label for="oname">Your name</label>
+    <input id="oname" name="name" required>
+
+    <label for="oemail">Email address</label>
+    <input id="oemail" name="email" type="email" required>
+
+    <label for="odetails">Order details</label>
+    <textarea id="odetails" name="message" rows="4" required></textarea>
+
+    <button type="submit">Place order</button>
+    <div class="ok" id="ook">Thanks! We have received your order.</div>
+  </form>
+
+<script>
+  document.getElementById('order').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(e.target).entries());
+    const res = await fetch('/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (res.ok) document.getElementById('ook').style.display = 'block';
+  });
+</script>
+</body>
+</html>

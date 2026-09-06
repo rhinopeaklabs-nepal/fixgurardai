@@ -1,0 +1,40 @@
+# --- secrets and local configuration -----------------------------------
+# Real API keys live only on the VPS. Committing .env once is enough to
+# leak a key permanently, since history keeps it after the file is removed.
+.env
+.env.local
+*.env
+!.env.example
+
+# --- runtime state -----------------------------------------------------
+# Audit records of real sites people asked FixGuard to look at. Not source.
+fixguard/backend/data/*.db
+fixguard/backend/data/*.db-journal
+fixguard/backend/data/*.db-wal
+fixguard/backend/data/*.db-shm
+fixguard/backend/reports/
+fixguard/backend/screenshots/
+
+# --- dependencies and build output -------------------------------------
+node_modules/
+dist/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+# --- editor and OS -----------------------------------------------------
+.qodo/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- TLS material ------------------------------------------------------
+fixguard/nginx/certs/*
+!fixguard/nginx/certs/.gitkeep
+
+# superseded empty repo, kept only as a local safety net
+fixguard/.git.disabled-nested/

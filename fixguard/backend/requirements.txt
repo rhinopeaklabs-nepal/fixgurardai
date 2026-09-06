@@ -1,0 +1,5 @@
+# Pins verified against Python 3.14 (local dev) and 3.12 (Docker/VPS).
+fastapi>=0.141,<1.0
+uvicorn>=0.52,<1.0
+pydantic>=2.13,<3.0
+playwright>=1.62,<2.0

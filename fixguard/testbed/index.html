@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bella's Bakery - Contact</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  body{font-family:system-ui,sans-serif;max-width:640px;margin:0 auto;padding:2rem;color:#1a1a2e}
+  h1{margin-bottom:.25rem}
+  p.sub{color:#666;margin-top:0}
+  form{border:1px solid #ddd;border-radius:10px;padding:1.25rem;margin:1.5rem 0}
+  label{display:block;font-size:.85rem;font-weight:600;margin:.75rem 0 .25rem}
+  input,textarea{width:100%;padding:.6rem;border:1px solid #ccc;border-radius:6px;font:inherit;box-sizing:border-box}
+  button{margin-top:1rem;background:#0055FF;color:#fff;border:0;padding:.7rem 1.4rem;border-radius:6px;font-weight:600;cursor:pointer}
+  .ok{display:none;margin-top:1rem;padding:.75rem;background:#e6f7ed;color:#0a6b3d;border-radius:6px;font-weight:600}
+  nav a{margin-right:1rem}
+</style>
+</head>
+<body>
+  <nav>
+    <a href="/">Contact</a><a href="/good.html">Order</a>
+    <a href="/rerender.html">Menu</a><a href="/missing.html">Gift cards</a>
+  </nav>
+
+  <h1>Bella's Bakery</h1>
+  <p class="sub">Custom cakes for every occasion. Send us a message.</p>
+
+  <!-- FAILURE MODE 1: silent failure.
+       The handler calls preventDefault, shows a success banner, and never
+       sends anything anywhere. This is the exact bug FixGuard exists to catch. -->
+  <form id="contact">
+    <h3>Get in touch</h3>
+    <label for="name">Your name</label>
+    <input id="name" name="name" required>
+
+    <label for="email">Email address</label>
+    <input id="email" name="email" type="email" required>
+
+    <label for="phone">Phone</label>
+    <input id="phone" name="phone" type="tel">
+
+    <label for="message">How can we help?</label>
+    <textarea id="message" name="message" rows="4" required></textarea>
+
+    <button type="submit">Send message</button>
+    <div class="ok" id="ok">Thank you! Your message has been sent.</div>
+  </form>
+
+<script>
+  // Intentional bug: success shown, nothing sent.
+  document.getElementById('contact').addEventListener('submit', function (e) {
+    e.preventDefault();
+    document.getElementById('ok').style.display = 'block';
+  });
+
+  // FAILURE MODE 2: console errors on load.
+  console.error('Uncaught TypeError: Cannot read properties of null (reading "addEventListener")');
+  console.warn('Deprecated API usage: webkitStorageInfo');
+  setTimeout(function () { window.__missing.init(); }, 300); // throws a real page error
+
+  // FAILURE MODE 3: a broken asset.
+  var img = new Image();
+  img.src = '/assets/hero-does-not-exist.png';
+</script>
+</body>
+</html>

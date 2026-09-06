@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Bella's Bakery - Menu</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  body{font-family:system-ui,sans-serif;max-width:640px;margin:0 auto;padding:2rem}
+  nav a{margin-right:1rem}
+  #board{border:1px solid #ddd;border-radius:8px;padding:1rem;margin-top:1rem;min-height:80px}
+</style>
+</head>
+<body>
+  <nav>
+    <a href="/">Contact</a><a href="/good.html">Order</a>
+    <a href="/rerender.html">Menu</a><a href="/missing.html">Gift cards</a>
+  </nav>
+
+  <h1>Today's menu</h1>
+  <p>This page reproduces the runaway re-render an unguarded
+     <code>useEffect</code> produces: state is written on every render, so the
+     component never settles. No console error is thrown, which is exactly why
+     it goes unnoticed.</p>
+
+  <div id="board"></div>
+
+<script>
+  // Equivalent to: useEffect(() => setState({...}))  with no dependency array.
+  const board = document.getElementById('board');
+  let tick = 0;
+  function render() {
+    tick += 1;
+    board.innerHTML = '';
+    for (let i = 0; i < 12; i++) {
+      const row = document.createElement('div');
+      row.textContent = 'Sourdough loaf - batch ' + tick + '.' + i;
+      row.setAttribute('data-tick', String(tick));
+      board.appendChild(row);
+    }
+    requestAnimationFrame(render);
+  }
+  render();
+</script>
+</body>
+</html>
