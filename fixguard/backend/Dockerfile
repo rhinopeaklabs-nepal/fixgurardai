@@ -16,7 +16,12 @@ COPY app ./app
 RUN mkdir -p /data && chown -R pwuser:pwuser /data /app
 USER pwuser
 
-EXPOSE 8000
+# No EXPOSE. It publishes nothing and is not needed for the web container
+# to reach this one - containers on a shared network resolve each other
+# by name - but Coolify reads it as "this service is web-facing" and
+# gives the api its own public hostname, which routes around nginx and
+# therefore around the rate limiting and real-client-address resolution.
+# The port the app listens on is stated by the CMD below.
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD python -c "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health')"
