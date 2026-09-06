@@ -200,6 +200,14 @@ async def generate(
         value = result.get("value") or value
         current = (target or {}).get("styles", {}).get(prop) or current
 
+    # A target the engine cannot justify is a guess, and a guess must not be
+    # handed over as a prompt. Both used to come out identical - a complete,
+    # copyable instruction - with only a banner above saying which was which,
+    # and a banner is the part people skim. Withholding the prompt is the only
+    # version of that warning nobody can skip past.
+    if result["confidence"] < scope.MIN_CONFIDENCE:
+        return _unresolved(intent, page_url, context, result)
+
     # ---- 4. freeze scope and assemble -------------------------------------
     frozen = scope.build_frozen_scope(target, context)
     prompt = scope.build_prompt(
@@ -293,6 +301,57 @@ async def generate(
 
 
 # --------------------------------------------------------------------------
+def _unresolved(
+    intent: str, page_url: str | None, context: dict[str, Any],
+    result: dict[str, Any],
+) -> dict[str, Any]:
+    """The request is scopeable, but this page did not yield a confident match.
+
+    Different from _out_of_scope: that one says "this is a project". This one
+    says "this is a fine request, I just could not find what you meant here".
+    The fix is different too, so the wording has to be - one needs splitting
+    up, the other needs naming the element.
+    """
+    candidates = context.get("candidates") or []
+    labels: list[str] = []
+    for c in candidates:
+        text = (c.get("text") or "").strip().splitlines()
+        label = text[0][:40] if text else ""
+        if label and label not in labels:
+            labels.append(label)
+        if len(labels) >= 5:
+            break
+
+    notes = [
+        "No element on this page clearly matched that wording, so no prompt "
+        "was generated. A guessed selector would have looked just as "
+        "confident as a real match and changed the wrong thing.",
+        "Name the element by the text a visitor can see, in quotes - for "
+        'example: Make the "Book Now" button background blue.',
+    ]
+    if labels:
+        notes.append("Text found on this page: " + ", ".join(f'"{l}"' for l in labels))
+
+    return {
+        "id": None,
+        "intent": intent,
+        "prompt": None,
+        "unresolved": True,
+        "selector": None,
+        "property": result.get("property"),
+        "value": result.get("value"),
+        "confidence": result.get("confidence", 0.0),
+        "match_reasons": [],
+        "alternatives": [],
+        "frozen_scope": {},
+        "diff_preview": None,
+        "savings": None,
+        "notes": notes,
+        "page_url": page_url,
+        "engine": "rules",
+    }
+
+
 def _out_of_scope(
     intent: str, page_url: str | None, context: dict[str, Any]
 ) -> dict[str, Any]:

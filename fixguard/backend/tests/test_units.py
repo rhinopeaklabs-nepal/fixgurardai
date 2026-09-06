@@ -16,7 +16,7 @@ import sys
 
 sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent.parent))
 
-from app import accounts, dns_health, scoring  # noqa: E402
+from app import accounts, dns_health, scope, scoring  # noqa: E402
 
 results: list[tuple[str, bool, str]] = []
 
@@ -67,6 +67,53 @@ def dns_tests() -> None:
         "U-06  A single address is never a disagreement",
         dns_health._disagree([answer("1.1.1.1")]) is False,
     )
+
+
+# -------------------------------------------------------------------- scope
+def scope_tests() -> None:
+    """The guard that decides whether a request can be scoped at all.
+
+    This is the rule that failed in production: "make the landing page more
+    modern with best seo" was accepted, matched against a logo link, and came
+    back as a confident instruction to change that logo's colour.
+    """
+    broad = [
+        "I want to make the landing page more modern with best seo",
+        "make it modern",
+        "make my site look better",
+        "redesign the whole site",
+        "improve the seo",
+        "make this page more professional",
+        "revamp the layout",
+        "make the design cleaner",
+        "add a new pricing page",
+        "fix everything",
+    ]
+    missed = [t for t in broad if not scope.is_broad_request(t)]
+    check("U-17  Requests that name no element are refused",
+          not missed, f"missed: {missed}")
+
+    # A false positive here refuses work the engine can actually do, which is
+    # the more expensive mistake of the two once the guard is wide.
+    narrow = [
+        "Make the Send message button background red",
+        "Make the main title bigger",
+        "Hide the phone field",
+        "Round the send message button corners to 12px",
+        "Change the heading to uppercase",
+        "Make the email field border red",
+        "Center the main title",
+        "Set the form font family to Georgia",
+        "Make the paragraph font size 18px",
+        "Make the send message button bold",
+    ]
+    wrong = [t for t in narrow if scope.is_broad_request(t)]
+    check("U-18  Single-element requests are still accepted",
+          not wrong, f"wrongly refused: {wrong}")
+
+    check("U-19  The confidence floor sits above a bare guess",
+          0.4 < scope.MIN_CONFIDENCE <= 0.85,
+          f"MIN_CONFIDENCE={scope.MIN_CONFIDENCE}; an unjustified match scores 0.4")
 
 
 # ----------------------------------------------------------------- accounts
@@ -142,6 +189,8 @@ def scoring_tests() -> None:
 def main() -> int:
     print("dns_health")
     dns_tests()
+    print("\nscope")
+    scope_tests()
     print("\naccounts")
     account_tests()
     print("\nscoring")

@@ -97,16 +97,42 @@ STOPWORDS = {
 
 QUOTED_RE = re.compile(r"[\"'“‘]([^\"'”’]{2,60})[\"'”’]")
 
-# Requests that are not a single-element CSS change. FixGuard cannot scope
-# these, and pretending otherwise produces a confident, wrong prompt.
+# A request is broad when no single element and one property could satisfy it.
+#
+# The earlier pattern required the literal word "it": "make it modern" was
+# caught, "make the landing page more modern" was not. So the commonest
+# phrasing of the commonest broad request walked straight through and came
+# back as a confident instruction to recolour a logo.
+#
+# Coverage is chosen over precision here. A broad request wrongly refused
+# costs the user one rephrase. A broad request wrongly accepted produces a
+# plausible, copyable prompt aimed at the wrong element - which is the exact
+# failure this module exists to prevent.
 BROAD_INTENT_RE = re.compile(
-    r"(whole|entire|complete(?:ly)?|full|all)\s+(site|page|website|thing|layout|design)"
-    r"|redesign|rebuild|rewrite|revamp|overhaul|from scratch"
-    r"|best\s+(ui|ux|design)|ui\s*/?\s*ux\s+design|make it (?:look )?(?:better|nice|modern|professional)"
+    # "the whole site", "all the pages"
+    r"(?:whole|entire|complete(?:ly)?|full|all)\s+(?:the\s+)?"
+    r"(?:site|page|pages|website|thing|layout|design|app)"
+    # verbs that are projects on their own
+    r"|redesign|re-design|rebuild|rewrite|revamp|overhaul|from scratch"
+    r"|modernis|moderniz|refresh the (?:look|design|site|page)"
+    # "make <anything> modern / better / professional"
+    r"|make\s+(?:it|this|the|my)\b[^.]{0,40}?\b"
+    r"(?:modern|better|nicer?|pretty|beautiful|professional|premium|"
+    r"cleaner?|attractive|appealing|stunning|impressive)"
+    # "more modern", "more professional", with no target named
+    r"|more\s+(?:modern|professional|beautiful|attractive|premium)"
+    # quality asks that name no element
+    r"|best\s+(?:ui|ux|design|seo|practices)|ui\s*/?\s*ux\s+design"
+    r"|\bseo\b|accessib|responsive design|mobile[- ]friendly"
+    # capability rather than styling
     r"|fully?\s+functional|make it work|fix everything|improve everything"
-    r"|add\s+(?:a\s+)?(?:new\s+)?(?:page|section|feature|form|blog|shop)",
+    # "add a new pricing page" - the noun can be qualified, so allow words
+    # between the article and the thing being added.
+    r"|add\s+(?:a|an|another)?[^.]{0,30}?\b(?:page|section|feature|form|blog|shop|component)\b",
     re.I,
 )
+
+MIN_CONFIDENCE = 0.5
 
 RELATIVE_SIZE = {
     "bigger": 1.25, "larger": 1.25, "huge": 1.6, "smaller": 0.8,

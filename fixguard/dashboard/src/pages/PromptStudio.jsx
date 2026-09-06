@@ -314,6 +314,8 @@ export default function PromptStudio() {
           fixes && <FixList data={fixes} onCopy={copyFix} copiedId={copiedId} />
         ) : result?.out_of_scope ? (
           <OutOfScope result={result} onPick={(v) => setIntent(v)} />
+        ) : result?.unresolved ? (
+          <Unresolved result={result} />
         ) : result ? (
           <Result result={result} onCopy={copyPrompt} copied={copied} />
         ) : null}
@@ -481,6 +483,41 @@ function Result({ result, onCopy, copied }) {
   );
 }
 
+
+/**
+ * A scopeable request that this page did not answer confidently.
+ *
+ * Deliberately shows no prompt. The engine reached a target it could not
+ * justify, and a guessed selector reads exactly as authoritative as a real
+ * match once it is in a code block - the previous version printed one with a
+ * warning above it, which is the part people skip.
+ */
+function Unresolved({ result }) {
+  return (
+    <div className="mt-8 rounded-2xl border border-amber-300 bg-amber-50 p-5">
+      <h2 className="font-display text-lg font-extrabold text-amber-900">
+        No prompt &mdash; nothing on the page clearly matched
+      </h2>
+      <ul className="mt-2 space-y-2 text-sm leading-relaxed text-amber-900">
+        {(result.notes || []).map((n, i) => (
+          <li key={i}>{n}</li>
+        ))}
+      </ul>
+      {result.property && (
+        <p className="mt-3 border-t border-amber-200 pt-3 text-xs text-amber-800">
+          The change itself was understood &mdash; property{" "}
+          <code className="rounded bg-white px-1 font-mono">{result.property}</code>
+          {result.value ? (
+            <>
+              {" "}to <code className="rounded bg-white px-1 font-mono">{result.value}</code>
+            </>
+          ) : null}
+          . Only the element is missing.
+        </p>
+      )}
+    </div>
+  );
+}
 
 function OutOfScope({ result, onPick }) {
   return (
