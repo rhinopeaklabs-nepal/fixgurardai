@@ -18,6 +18,16 @@ export default function AuditDetail() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const esRef = useRef(null);
 
+  // The delete button arms on the first press. Leaving it armed means a
+  // stray second click minutes later - or a click on a page restored from
+  // the back button - destroys a report and every share link pointing at it.
+  // Arming is a statement of intent, and intent goes stale.
+  useEffect(() => {
+    if (!confirmDelete) return;
+    const t = setTimeout(() => setConfirmDelete(false), 6000);
+    return () => clearTimeout(t);
+  }, [confirmDelete]);
+
   useEffect(() => {
     let cancelled = false;
     setLog([]);
@@ -152,7 +162,10 @@ export default function AuditDetail() {
         <h1 className="mb-1 text-xl font-bold text-slate-900">Auditing</h1>
         <p className="mb-6 break-all text-sm text-slate-500">{run.target_url}</p>
         <div className="rounded-2xl border border-slate-200 bg-white p-6">
-          <div className="mb-3 flex items-center gap-3">
+          {/* A progress bar is a picture. Without this the only thing a
+              screen reader announces for the whole run is silence, and the
+              audit is the part of the app with the longest wait in it. */}
+          <div className="mb-3 flex items-center gap-3" aria-live="polite">
             <span className="animate-ring h-3 w-3 rounded-full bg-brand" />
             <span className="font-medium text-slate-700">
               {log[log.length - 1] || run.stage || "Starting"}
@@ -199,6 +212,17 @@ export default function AuditDetail() {
               </li>
             ))}
           </ol>
+
+          {/* The run is on the server, not in this tab. People sit and watch
+              this bar because nothing has ever told them they need not. */}
+          <p className="mt-5 border-t border-slate-100 pt-4 text-sm text-slate-500">
+            This is running on our side. You can close this tab and pick the
+            report up from{" "}
+            <Link to="/history" className="font-medium text-brand hover:underline">
+              History
+            </Link>{" "}
+            whenever you like.
+          </p>
         </div>
       </Shell>
     );

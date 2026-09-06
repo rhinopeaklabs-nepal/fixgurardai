@@ -2,11 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 
+// Only the three things somebody signs in to do. Architecture explains how
+// FixGuard works - worth reading once, never the reason anyone opened the
+// app - so it moved into the account menu. Four tabs where one is not a task
+// makes the reader weigh an option that is never the answer, on every page.
 const LINKS = [
   ["/", "Audit"],
   ["/prompts", "Prompt Studio"],
   ["/history", "History"],
-  ["/architecture", "Architecture"],
 ];
 
 export default function Nav() {
@@ -99,10 +102,18 @@ export default function Nav() {
                     )}
                     <p className="truncate text-sm text-slate-500">{user.email}</p>
                   </div>
+                  <NavLink
+                    role="menuitem"
+                    to="/architecture"
+                    onClick={() => setOpen(false)}
+                    className="block px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    How FixGuard works
+                  </NavLink>
                   <button
                     role="menuitem"
                     onClick={handleSignOut}
-                    className="w-full px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    className="w-full border-t border-slate-100 px-4 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50"
                   >
                     Sign out
                   </button>

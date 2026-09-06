@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ALL_MODULES, MODULE_LABELS, api } from "../lib/api";
 import { useAuth } from "../lib/auth";
@@ -57,6 +57,8 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [history, setHistory] = useState([]);
   const [quota, setQuota] = useState(null);
+  const [consentMissing, setConsentMissing] = useState(false);
+  const consentRef = useRef(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -76,10 +78,17 @@ export default function Home() {
   async function submit(e) {
     e.preventDefault();
     setError(null);
+    // Telling somebody at the foot of the form that they missed a checkbox
+    // higher up leaves them to find it. Take them to it and put the cursor
+    // in it, so the fix is one keystroke from where they already are.
     if (!consent) {
+      setConsentMissing(true);
       setError("Please confirm you own this site or have permission to test it.");
+      consentRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+      consentRef.current?.focus({ preventScroll: true });
       return;
     }
+    setConsentMissing(false);
     setBusy(true);
     try {
       const auth =
@@ -102,6 +111,7 @@ export default function Home() {
   }
 
   const firstName = (user?.name || user?.email || "").split(/[\s@]/)[0];
+  const typical = typicalDuration(history, maxPages);
   const pageLabel = PAGE_CHOICES.find(([v]) => v === maxPages)?.[1] ?? "";
   const outOfQuota = quota?.remaining === 0;
 
@@ -152,6 +162,12 @@ export default function Home() {
               {busy ? "Starting…" : "Run audit"}
             </button>
           </div>
+
+          {/* An audit drives a real browser, so it takes as long as it takes.
+              Saying nothing leaves people watching a spinner and wondering
+              whether it hung; this is measured from their own past runs at
+              this page count rather than a number invented for reassurance. */}
+          <p className="mt-2 text-xs text-slate-500">{typical}</p>
 
           {/* Settings people rarely change, folded away but never hidden:
               the summary line says what they currently are, so collapsing
@@ -269,11 +285,25 @@ export default function Home() {
             </div>
           )}
 
-          <label className="mt-5 flex items-start gap-2.5 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+          <label
+            className={`mt-5 flex items-start gap-2.5 rounded-lg p-3 text-sm text-amber-900 transition ${
+              consentMissing
+                ? "bg-amber-100 ring-2 ring-amber-500"
+                : "bg-amber-50"
+            }`}
+          >
             <input
+              ref={consentRef}
               type="checkbox"
               checked={consent}
-              onChange={(e) => setConsent(e.target.checked)}
+              aria-invalid={consentMissing || undefined}
+              onChange={(e) => {
+                setConsent(e.target.checked);
+                if (e.target.checked) {
+                  setConsentMissing(false);
+                  setError(null);
+                }
+              }}
               className="mt-0.5 h-4 w-4 accent-[#0055ff]"
             />
             <span className="leading-relaxed">
@@ -355,6 +385,29 @@ export default function Home() {
       </div>
     </div>
   );
+}
+
+/**
+ * How long this is likely to take, from the runs already on the account.
+ *
+ * The median rather than the mean: one audit of a site that timed out drags
+ * an average somewhere no run has ever been, and the number is only worth
+ * printing if it describes a typical wait.
+ */
+function typicalDuration(history, maxPages) {
+  const times = history
+    .filter((a) => a.status === "complete" && a.duration_ms > 0)
+    .map((a) => a.duration_ms)
+    .sort((a, b) => a - b);
+
+  if (times.length < 3) {
+    return maxPages > 1
+      ? "A multi-page scan usually takes a minute or two."
+      : "A single page usually takes under a minute.";
+  }
+  const median = times[Math.floor(times.length / 2)] / 1000;
+  const shown = median < 90 ? `${Math.round(median)} seconds` : `${Math.round(median / 60)} minutes`;
+  return `Your audits typically take about ${shown}. You can leave this page — it keeps running.`;
 }
 
 /* ------------------------------------------------------------------ quota */

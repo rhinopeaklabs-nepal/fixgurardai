@@ -29,7 +29,17 @@ function Shell() {
 
   return (
     <>
+      {/* The first thing a keyboard reaches on every page. Without it, getting
+          to the audit form means tabbing past the whole navigation on every
+          single load, which is the one journey a keyboard user repeats most. */}
+      <a
+        href="#main"
+        className="sr-only left-3 top-3 z-50 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white focus:not-sr-only focus:absolute"
+      >
+        Skip to content
+      </a>
       {!isPublic && !isSignIn && <Nav />}
+      <main id="main">
       <Routes>
         <Route path="/r/:token" element={<SharedReport />} />
         <Route path="/signin" element={<SignedOutOnly><SignIn /></SignedOutOnly>} />
@@ -43,6 +53,7 @@ function Shell() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </main>
     </>
   );
 }
