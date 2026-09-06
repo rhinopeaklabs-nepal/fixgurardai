@@ -1,0 +1,68 @@
+# FixGuard AI - single-stack deployment for Coolify.
+#
+# Everything behind one domain. The web container serves the built dashboard
+# and proxies /api to the api container, so the browser only ever talks to one
+# origin: no CORS, and the SSE progress stream needs no special handling.
+#
+# Coolify's own proxy terminates TLS in front of the web service, which is why
+# nothing here publishes a host port. fixguard/docker-compose.yml remains the
+# plain-Docker variant, with its own nginx owning 80/443.
+
+services:
+  api:
+    build:
+      context: ./fixguard/backend
+    restart: unless-stopped
+    environment:
+      FIXGUARD_API_KEY: ${FIXGUARD_API_KEY:?set FIXGUARD_API_KEY in Coolify}
+      # Same-origin, so nothing is ever actually cross-origin. The variable is
+      # required by the app, and pointing it at the site's own domain keeps it
+      # correct if the dashboard is ever served from somewhere else.
+      CORS_ORIGINS: ${PUBLIC_BASE_URL:?set PUBLIC_BASE_URL in Coolify}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
+      MAX_CONCURRENT_AUDITS: "1"
+      AUDIT_HARD_TIMEOUT_S: "90"
+      FIXGUARD_DATA_DIR: /data
+    volumes:
+      - fixguard-data:/data
+    # VPS KVM 1 is 4 GB and Coolify itself holds about 1 GB. Capping Chromium
+    # means a runaway page is OOM-killed inside the container instead of
+    # taking the control panel down with it.
+    mem_limit: 2g
+    # Chromium puts renderer surfaces in /dev/shm. Docker's 64 MB default
+    # makes it die partway through a page load, which FixGuard would then
+    # report as the audited site being broken.
+    shm_size: 1gb
+    expose:
+      - "8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health')
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
+
+  web:
+    build:
+      context: ./fixguard/dashboard
+      args:
+        # Empty means same origin; nginx in this image proxies /api to `api`.
+        VITE_API_BASE_URL: ""
+        VITE_API_KEY: ${FIXGUARD_API_KEY:?set FIXGUARD_API_KEY in Coolify}
+    restart: unless-stopped
+    environment:
+      # Coolify reads this and assigns the public domain to this service.
+      - SERVICE_FQDN_WEB_80=/
+    depends_on:
+      api:
+        condition: service_healthy
+    mem_limit: 256m
+    expose:
+      - "80"
+
+volumes:
+  fixguard-data:

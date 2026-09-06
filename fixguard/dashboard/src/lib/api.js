@@ -1,4 +1,11 @@
-const BASE = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
+// An empty VITE_API_BASE_URL means "same origin", which is how the single
+// docker-compose deployment serves the dashboard: nginx hands /api to the
+// api container, so the bundle needs no absolute host. The check is against
+// undefined rather than falsy, because `"" || fallback` would quietly send
+// production traffic to the developer's own machine.
+const RAW_BASE = import.meta.env.VITE_API_BASE_URL;
+const BASE = (RAW_BASE === undefined ? "http://127.0.0.1:8000" : RAW_BASE)
+  .replace(/\/$/, "");
 const KEY = import.meta.env.VITE_API_KEY || "";
 
 export const ALL_MODULES = ["form", "router", "assets", "reach"];
