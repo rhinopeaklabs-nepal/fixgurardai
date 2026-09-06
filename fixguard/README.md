@@ -14,6 +14,22 @@ Two things it does:
 2. **Stops AI Builder wandering** — turns "make the booking button blue" into
    a prompt scoped so tightly the builder cannot rewrite the rest of your site.
 
+## Accounts
+
+The dashboard is behind a sign-in. Audits, reports and prompts belong to
+the account that created them, so one customer never sees another's list
+of sites - and audits created before accounts existed stay unowned and
+invisible rather than being handed to whoever registers first.
+
+Sessions are opaque tokens in an httpOnly cookie, stored hashed. Passwords
+are scrypt from the standard library. The bundle carries no API key any
+more: that key is now only a server-to-server credential, used by the
+test suite and scripted callers.
+
+This is FixGuard's own password, and the distinction matters: FixGuard
+still never asks for the password to a site it audits. To check a page
+behind a login you sign in yourself and hand it the resulting session.
+
 ## Running the checks
 
 The acceptance suite drives a real browser against a local testbed of

@@ -57,10 +57,14 @@ def start(
     rate_key: str | None = None,
     max_pages: int = 1,
     auth: dict[str, Any] | None = None,
+    owner_id: str | None = None,
 ) -> str:
     mods = [m for m in (modules or ALL_MODULES) if m in ALL_MODULES] or ALL_MODULES
     run_id = str(uuid.uuid4())
-    db.insert_run(run_id, target_url, _now(), modules=mods, retry_of=retry_of)
+    db.insert_run(
+        run_id, target_url, _now(), modules=mods, retry_of=retry_of,
+        owner_id=owner_id,
+    )
     _tasks[run_id] = asyncio.create_task(
         _execute(run_id, target_url, test_email, mods, rate_key, max_pages, auth)
     )

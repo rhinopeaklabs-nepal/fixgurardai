@@ -100,9 +100,15 @@ def main() -> int:
             raise
 
         print("running acceptance scenarios...\n")
-        from tests import test_acceptance
+        from tests import test_acceptance, test_accounts
 
-        return test_acceptance.main()
+        srs = test_acceptance.main()
+        print("\nrunning account scenarios...\n")
+        # Both run even when the first fails. A red SRS suite says nothing
+        # about whether ownership still holds, and finding out both at once
+        # is worth more than stopping at the first bad news.
+        accounts = test_accounts.main()
+        return srs or accounts
     finally:
         for proc in procs:
             proc.terminate()

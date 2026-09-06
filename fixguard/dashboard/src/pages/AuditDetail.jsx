@@ -40,7 +40,11 @@ export default function AuditDetail() {
     }
 
     function openStream() {
-      const es = new EventSource(api.streamUrl(id));
+      // The stream is authenticated now. EventSource cannot set headers, but
+      // it does send cookies once told to - and in development the dashboard
+      // and the API are on different ports, which counts as cross-origin, so
+      // this cannot be left to the same-origin default.
+      const es = new EventSource(api.streamUrl(id), { withCredentials: true });
       esRef.current = es;
 
       es.addEventListener("progress", (e) => {

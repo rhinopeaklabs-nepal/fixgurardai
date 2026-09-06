@@ -52,7 +52,9 @@ services:
       args:
         # Empty means same origin; nginx in this image proxies /api to `api`.
         VITE_API_BASE_URL: ""
-        VITE_API_KEY: ${FIXGUARD_API_KEY:?set FIXGUARD_API_KEY in Coolify}
+        # No API key is baked in any more. The dashboard authenticates
+        # with a session cookie, so the bundle carries no secret and
+        # view-source hands a visitor nothing.
     restart: unless-stopped
     environment:
       # Coolify reads this and assigns the public domain to this service.

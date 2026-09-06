@@ -11,8 +11,15 @@ from fastapi.responses import Response, StreamingResponse
 from .. import auth_session, compare, config, db, ratelimit, report_render, schemas
 from ..audit import runner
 from ..errors import FixGuardError
+from . import auth
 
 router = APIRouter(prefix="/api/v1", tags=["audits"])
+
+# Everything run with the API key rather than a session belongs to one
+# synthetic owner. It is a real value rather than NULL so that keyed runs are
+# still scoped to something, and so they can never be confused with the
+# pre-accounts rows, which stay unowned and therefore invisible.
+SERVICE_OWNER = "svc:api-key"
 
 
 def require_key(x_api_key: str | None = Header(default=None)) -> str:
@@ -21,13 +28,62 @@ def require_key(x_api_key: str | None = Header(default=None)) -> str:
     return x_api_key or ""
 
 
-def _load(audit_id: str) -> dict:
+def _load(audit_id: str, owner_id: str | None = None) -> dict:
+    """Fetch an audit, refusing one that belongs to somebody else.
+
+    Somebody else's audit answers AUDIT_NOT_FOUND rather than a distinct
+    "forbidden". A different status would let anyone with a valid session
+    walk the id space and learn which audit ids exist, and the ids are the
+    only thing standing between a stranger and a report about a real site.
+
+    owner_id is optional so the public share-link path, which has no session
+    at all and is authorised by holding the token, can still read a run.
+    """
     run = db.get_run(audit_id)
+    missing = FixGuardError(
+        "AUDIT_NOT_FOUND", "The requested audit_id does not exist.", audit_id
+    )
     if not run:
-        raise FixGuardError(
-            "AUDIT_NOT_FOUND", "The requested audit_id does not exist.", audit_id
-        )
+        raise missing
+    if owner_id is not None and run.get("owner_id") != owner_id:
+        raise missing
     return run
+
+
+def identity(request: Request) -> dict:
+    """Who is making this call, and what their work belongs to.
+
+    Two ways in, and they are not equivalent:
+
+    * A **session cookie** - a person using the dashboard. Their audits are
+      owned by their account and only they can read them back.
+    * The **API key** - the acceptance suite and anything scripted. It gets a
+      single fixed owner rather than a per-caller one, because a shared key
+      cannot distinguish its callers and pretending otherwise would put one
+      script's results in front of another.
+
+    Rate limits count against ``bucket``, which is the account for a signed-in
+    person and the address for a keyed caller. Counting keyed calls per key
+    would put every scripted client in one bucket again, which is the problem
+    accounts were introduced to fix.
+    """
+    user = auth.current_user(request)
+    if user:
+        return {"owner_id": user["id"], "bucket": f"user:{user['id']}", "user": user}
+
+    key = request.headers.get("x-api-key") or ""
+    if secrets.compare_digest(key, config.API_KEY):
+        ip = (request.headers.get("x-real-ip") or "").strip()
+        return {
+            "owner_id": SERVICE_OWNER,
+            "bucket": f"svc:{ip}" if ip else "svc:key",
+            "user": None,
+        }
+
+    raise FixGuardError(
+        "AUTH_REQUIRED",
+        "Sign in to run an audit. Your audits stay private to your account.",
+    )
 
 
 def client_bucket(request: Request, api_key: str = Depends(require_key)) -> str:
@@ -71,7 +127,7 @@ def _enforce_rate_limit(bucket: str) -> int:
 )
 async def start_audit(
     payload: schemas.StartAuditRequest,
-    bucket: str = Depends(client_bucket),
+    who: dict = Depends(identity),
 ) -> schemas.StartAuditResponse:
     auth: dict | None = None
     if payload.auth and (payload.auth.cookie_header or payload.auth.headers):
@@ -91,13 +147,14 @@ async def start_audit(
             "submit_forms": payload.auth.submit_forms,
         }
 
-    remaining = _enforce_rate_limit(bucket)
+    remaining = _enforce_rate_limit(who["bucket"])
     test_email = payload.test_email or f"test-{secrets.token_hex(6)}@fixguard.test"
     audit_id = runner.start(
         payload.domain_url,
         test_email,
         payload.modules,
-        rate_key=bucket,
+        rate_key=who["bucket"],
+        owner_id=who["owner_id"],
         max_pages=payload.max_pages,
         auth=auth,
     )
@@ -116,7 +173,7 @@ async def start_audit_alias(
     payload: schemas.StartAuditRequest,
     bucket: str = Depends(client_bucket),
 ) -> schemas.StartAuditResponse:
-    return await start_audit(payload, bucket)
+    return await start_audit(payload, who)
 
 
 @router.post(
@@ -125,10 +182,10 @@ async def start_audit_alias(
     status_code=201,
 )
 async def retry_audit(
-    audit_id: str, bucket: str = Depends(client_bucket)
+    audit_id: str, who: dict = Depends(identity)
 ) -> schemas.StartAuditResponse:
     """NFR 5.3: failed audits are retryable in one click."""
-    run = _load(audit_id)
+    run = _load(audit_id, who["owner_id"])
     if run["status"] != "failed":
         raise FixGuardError(
             "AUDIT_NOT_COMPLETE",
@@ -142,7 +199,8 @@ async def retry_audit(
         f"test-{secrets.token_hex(6)}@fixguard.test",
         modules,
         retry_of=audit_id,
-        rate_key=bucket,
+        rate_key=who["bucket"],
+        owner_id=who["owner_id"],
     )
     return schemas.StartAuditResponse(
         audit_id=new_id,
@@ -156,50 +214,53 @@ async def retry_audit(
 # --------------------------------------------------------------------------
 # Read
 # --------------------------------------------------------------------------
-@router.get("/audits", dependencies=[Depends(require_key)])
-async def list_audits(limit: int = 25, bucket: str = Depends(client_bucket)) -> dict:
+@router.get("/audits")
+async def list_audits(limit: int = 25, who: dict = Depends(identity)) -> dict:
     return {
-        "audits": db.list_runs(min(max(limit, 1), 100)),
-        "quota": ratelimit.quota(bucket),
+        "audits": db.list_runs(min(max(limit, 1), 100), who["owner_id"]),
+        "quota": ratelimit.quota(who["bucket"]),
     }
 
 
 @router.get("/quota")
-async def get_quota(bucket: str = Depends(client_bucket)) -> dict:
-    return ratelimit.quota(bucket)
+async def get_quota(who: dict = Depends(identity)) -> dict:
+    return ratelimit.quota(who["bucket"])
 
 
 @router.get(
     "/audits/{audit_id}/status",
     response_model=schemas.AuditStatusResponse,
-    dependencies=[Depends(require_key)],
 )
-async def audit_status(audit_id: str) -> dict:
-    return schemas.status_view(_load(audit_id))
+async def audit_status(audit_id: str, who: dict = Depends(identity)) -> dict:
+    return schemas.status_view(_load(audit_id, who["owner_id"]))
 
 
-@router.get("/audits/{audit_id}/report", dependencies=[Depends(require_key)])
-async def audit_report(audit_id: str) -> dict:
-    run = _load(audit_id)
+@router.get("/audits/{audit_id}/report")
+async def audit_report(audit_id: str, who: dict = Depends(identity)) -> dict:
+    run = _load(audit_id, who["owner_id"])
     share = db.find_share_link_for_audit(audit_id)
     run["share_url"] = f"{config.PUBLIC_BASE_URL}/r/{share['token']}" if share else None
     return run
 
 
 # Alias: the full report is the natural default for GET /audits/{id}.
-@router.get("/audits/{audit_id}", dependencies=[Depends(require_key)])
-async def get_audit(audit_id: str) -> dict:
-    return await audit_report(audit_id)
+@router.get("/audits/{audit_id}")
+async def get_audit(audit_id: str, who: dict = Depends(identity)) -> dict:
+    return await audit_report(audit_id, who)
 
 
 @router.get("/audits/{audit_id}/stream")
-async def stream_audit(audit_id: str, request: Request) -> StreamingResponse:
+async def stream_audit(
+    audit_id: str, request: Request, who: dict = Depends(identity)
+) -> StreamingResponse:
     """SSE progress.
 
-    Browsers cannot attach headers to EventSource, so the unguessable audit
-    UUID acts as the capability for this read-only progress channel.
+    EventSource cannot attach headers, which is why this used to lean on
+    the unguessable audit id as its only capability. It is same-origin
+    though, so the browser sends the session cookie without being asked -
+    and a guessed id now gets nothing.
     """
-    run = _load(audit_id)
+    run = _load(audit_id, who["owner_id"])
     queue = runner.subscribe(audit_id)
 
     async def gen():
@@ -262,21 +323,24 @@ async def stream_audit(audit_id: str, request: Request) -> StreamingResponse:
     )
 
 
-@router.get("/audits/{audit_id}/compare", dependencies=[Depends(require_key)])
-async def compare_audits(audit_id: str, baseline: str | None = None) -> dict:
+@router.get("/audits/{audit_id}/compare")
+async def compare_audits(
+    audit_id: str, baseline: str | None = None,
+    who: dict = Depends(identity),
+) -> dict:
     """Diff this audit against an earlier one of the same site.
 
     With no ``baseline`` it picks the most recent earlier audit of the same
     URL, which is what you want right after re-running a fix.
     """
-    after = _load(audit_id)
+    after = _load(audit_id, who["owner_id"])
     if after["status"] != "complete":
         raise FixGuardError(
             "AUDIT_NOT_COMPLETE", "This audit has not finished yet.", audit_id
         )
 
     if baseline:
-        before = _load(baseline)
+        before = _load(baseline, who["owner_id"])
     else:
         before = db.previous_run_for(
             after["target_url"], after["created_at"], after["id"]
@@ -296,10 +360,10 @@ async def compare_audits(audit_id: str, baseline: str | None = None) -> dict:
     return compare.build(before, after)
 
 
-@router.get("/reports/{audit_id}/pdf", dependencies=[Depends(require_key)])
-async def report_pdf(audit_id: str) -> Response:
+@router.get("/reports/{audit_id}/pdf")
+async def report_pdf(audit_id: str, who: dict = Depends(identity)) -> Response:
     """FR-4.2: branded PDF certificate."""
-    run = _load(audit_id)
+    run = _load(audit_id, who["owner_id"])
     if run["status"] != "complete":
         raise FixGuardError(
             "AUDIT_NOT_COMPLETE", "The audit is not complete yet.", audit_id
@@ -316,10 +380,10 @@ async def report_pdf(audit_id: str) -> Response:
     )
 
 
-@router.get("/reports/{audit_id}/badge", dependencies=[Depends(require_key)])
-async def report_badge(audit_id: str) -> dict:
+@router.get("/reports/{audit_id}/badge")
+async def report_badge(audit_id: str, who: dict = Depends(identity)) -> dict:
     """FR-4.4: the embed snippet, once the audit has a share link."""
-    run = _load(audit_id)
+    run = _load(audit_id, who["owner_id"])
     share = db.find_share_link_for_audit(audit_id)
     if not share:
         raise FixGuardError(
@@ -346,10 +410,11 @@ async def report_badge(audit_id: str) -> dict:
 @router.post(
     "/audits/{audit_id}/share",
     response_model=schemas.ShareResponse,
-    dependencies=[Depends(require_key)],
 )
-async def create_share(audit_id: str) -> schemas.ShareResponse:
-    run = _load(audit_id)
+async def create_share(
+    audit_id: str, who: dict = Depends(identity)
+) -> schemas.ShareResponse:
+    run = _load(audit_id, who["owner_id"])
     if run["status"] != "complete":
         raise FixGuardError(
             "AUDIT_NOT_COMPLETE", "The audit is not complete yet.", audit_id

@@ -23,6 +23,10 @@ ERROR_CODES: dict[str, tuple[int, bool]] = {
     "WORKER_CRASH": (500, True),
     "AI_AGENT_ERROR": (502, True),
     "AUTH_INVALID": (401, False),
+    # Not signed in at all, as opposed to signed in with something wrong.
+    # Same status, different code, because the dashboard reacts to them
+    # differently: one shows the sign-in screen, the other an error.
+    "AUTH_REQUIRED": (401, False),
     "CONSENT_REQUIRED": (400, False),
     "VALIDATION_ERROR": (400, False),
     "SESSION_INVALID": (422, False),

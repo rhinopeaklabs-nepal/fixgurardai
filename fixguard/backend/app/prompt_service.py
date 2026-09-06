@@ -123,6 +123,7 @@ async def generate(
     code_context: str | None = None,
     target_selector: str | None = None,
     use_model: bool = True,
+    owner_id: str | None = None,
 ) -> dict[str, Any]:
     intent = (intent or "").strip()
     if not intent:
@@ -285,6 +286,7 @@ async def generate(
             "tokens_saved_estimate": savings["tokens_saved_estimate"],
             "engine": payload["engine"],
             "created_at": created,
+            "owner_id": owner_id,
         }
     )
     return payload

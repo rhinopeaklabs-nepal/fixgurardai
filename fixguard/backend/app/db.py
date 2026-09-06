@@ -91,6 +91,25 @@ CREATE TABLE IF NOT EXISTS geo_ping_results (
     created_at       TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS users (
+    id            TEXT PRIMARY KEY,
+    email         TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    name          TEXT,
+    password_hash TEXT NOT NULL,          -- scrypt$n$r$p$salt$key
+    created_at    TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+    -- The token itself is never stored, only its SHA-256, so a copy of this
+    -- table does not hand over live sessions.
+    token_hash TEXT PRIMARY KEY,
+    user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_expiry ON sessions(expires_at);
 CREATE INDEX IF NOT EXISTS idx_share_audit ON share_links(audit_id);
 CREATE INDEX IF NOT EXISTS idx_prompts_created ON surgical_prompts(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_agent_calls ON agent_calls(created_at DESC);
@@ -136,6 +155,12 @@ MIGRATIONS = [
     ("audit_runs", "pages_audited", "INTEGER DEFAULT 1"),
     ("audit_runs", "site_map", "TEXT"),
     ("audit_runs", "auth_info", "TEXT"),
+    # Audits created before accounts existed have no owner. They are left
+    # NULL rather than assigned to whoever signs up first: those runs name
+    # real sites somebody audited, and handing them to a stranger because
+    # they happened to register first is not a migration, it is a leak.
+    ("audit_runs", "owner_id", "TEXT"),
+    ("surgical_prompts", "owner_id", "TEXT"),
 ]
 
 
@@ -190,19 +215,21 @@ def insert_run(
     created_at: str,
     modules: list[str] | None = None,
     retry_of: str | None = None,
+    owner_id: str | None = None,
 ) -> None:
     with get_conn() as conn:
         conn.execute(
             "INSERT INTO audit_runs "
             "(id, target_url, status, stage, progress_percent, "
-            " modules_selected, modules_complete, created_at, retry_of) "
-            "VALUES (?, ?, 'queued', 'Queued', 0, ?, '[]', ?, ?)",
+            " modules_selected, modules_complete, created_at, retry_of, owner_id) "
+            "VALUES (?, ?, 'queued', 'Queued', 0, ?, '[]', ?, ?, ?)",
             (
                 run_id,
                 target_url,
                 json.dumps(modules or []),
                 created_at,
                 retry_of,
+                owner_id,
             ),
         )
 
@@ -230,13 +257,25 @@ def get_run(run_id: str) -> dict[str, Any] | None:
     return _decode(row) if row else None
 
 
-def list_runs(limit: int = 25) -> list[dict[str, Any]]:
+def list_runs(limit: int = 25, owner_id: str | None = None) -> list[dict[str, Any]]:
+    """History for one owner.
+
+    owner_id is required in practice - every caller has an authenticated
+    identity. It stays optional in the signature only so an unowned call
+    returns nothing rather than everything, because the failure mode of the
+    other default is showing one customer the list of sites another one
+    audited.
+    """
+    columns = (
+        "id, target_url, status, health_score, grade, created_at, "
+        "completed_at, duration_ms, error_code"
+    )
     with get_conn() as conn:
         rows = conn.execute(
-            "SELECT id, target_url, status, health_score, grade, created_at, "
-            "completed_at, duration_ms, error_code FROM audit_runs "
+            f"SELECT {columns} FROM audit_runs "
+            "WHERE owner_id IS NOT NULL AND owner_id = ? "
             "ORDER BY created_at DESC LIMIT ?",
-            (limit,),
+            (owner_id, limit),
         ).fetchall()
     return [dict(r) for r in rows]
 
@@ -276,6 +315,7 @@ def insert_prompt(record: dict[str, Any]) -> None:
         "id", "original_intent", "guarded_prompt", "scope_boundary",
         "target_selector", "css_property", "css_value", "source_url",
         "confidence", "tokens_saved_estimate", "engine", "created_at",
+        "owner_id",
     )
     values = []
     for c in cols:
@@ -289,11 +329,13 @@ def insert_prompt(record: dict[str, Any]) -> None:
         )
 
 
-def list_prompts(limit: int = 50) -> list[dict[str, Any]]:
+def list_prompts(limit: int = 50, owner_id: str | None = None) -> list[dict[str, Any]]:
     with get_conn() as conn:
         rows = conn.execute(
-            "SELECT * FROM surgical_prompts ORDER BY created_at DESC LIMIT ?",
-            (limit,),
+            "SELECT * FROM surgical_prompts "
+            "WHERE owner_id IS NOT NULL AND owner_id = ? "
+            "ORDER BY created_at DESC LIMIT ?",
+            (owner_id, limit),
         ).fetchall()
     out = []
     for r in rows:

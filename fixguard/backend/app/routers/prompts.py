@@ -5,23 +5,26 @@ from fastapi import APIRouter, Depends
 
 from .. import db, llm, prompt_service, remediation, schemas
 from ..errors import FixGuardError
-from .audits import require_key
+from .audits import identity
 
 router = APIRouter(prefix="/api/v1", tags=["prompts"])
 
 
-@router.post("/prompts/surgify", dependencies=[Depends(require_key)])
-async def surgify(payload: schemas.SurgifyRequest) -> dict:
+@router.post("/prompts/surgify")
+async def surgify(
+    payload: schemas.SurgifyRequest, who: dict = Depends(identity)
+) -> dict:
     return await prompt_service.generate(
         intent=payload.intent,
         page_url=payload.page_url,
         code_context=payload.code_context,
         target_selector=payload.target_selector,
         use_model=payload.use_model,
+        owner_id=who["owner_id"],
     )
 
 
-@router.post("/prompts/from-audit", dependencies=[Depends(require_key)])
+@router.post("/prompts/from-audit", dependencies=[Depends(identity)])
 async def from_audit(payload: schemas.FromAuditRequest) -> dict:
     """Turn a completed audit's findings into ready-to-paste fix prompts."""
     run = db.get_run(payload.audit_id)
@@ -68,15 +71,15 @@ async def from_audit(payload: schemas.FromAuditRequest) -> dict:
     return result
 
 
-@router.get("/prompts/history", dependencies=[Depends(require_key)])
-async def history(limit: int = 50) -> dict:
+@router.get("/prompts/history")
+async def history(limit: int = 50, who: dict = Depends(identity)) -> dict:
     return {
-        "prompts": db.list_prompts(min(max(limit, 1), 200)),
+        "prompts": db.list_prompts(min(max(limit, 1), 200), who["owner_id"]),
         "totals": db.prompt_totals(),
     }
 
 
-@router.get("/agents/status", dependencies=[Depends(require_key)])
+@router.get("/agents/status", dependencies=[Depends(identity)])
 async def agent_status() -> dict:
     """Which agents are model-backed right now, and recent call telemetry."""
     configured = llm.is_configured()

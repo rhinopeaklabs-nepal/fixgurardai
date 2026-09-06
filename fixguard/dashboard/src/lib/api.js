@@ -6,7 +6,13 @@
 const RAW_BASE = import.meta.env.VITE_API_BASE_URL;
 const BASE = (RAW_BASE === undefined ? "http://127.0.0.1:8000" : RAW_BASE)
   .replace(/\/$/, "");
-const KEY = import.meta.env.VITE_API_KEY || "";
+
+// There is deliberately no API key in this bundle any more. It used to ship
+// one so the dashboard could authenticate, which meant view-source handed it
+// to anybody. The session cookie replaced it: httpOnly, so no script on this
+// page can read it either, and the key is now only ever a server-to-server
+// credential. Requests must opt into sending cookies explicitly.
+const CREDENTIALS = "include";
 
 export const ALL_MODULES = ["form", "router", "assets", "reach"];
 
@@ -31,7 +37,8 @@ export const GRADE_CHIP = {
 async function request(path, options = {}) {
   const res = await fetch(`${BASE}${path}`, {
     ...options,
-    headers: { "Content-Type": "application/json", "X-API-Key": KEY, ...(options.headers || {}) },
+    credentials: CREDENTIALS,
+    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
   });
   const text = await res.text();
   let body = null;
@@ -92,11 +99,30 @@ export const api = {
     }),
   promptHistory: () => request("/api/v1/prompts/history"),
   agentStatus: () => request("/api/v1/agents/status"),
+
+  // Accounts. /me answers 200 with a null user when signed out, so the
+  // app can ask "who is this" on every load without treating the normal
+  // signed-out state as an error.
+  me: () => request("/api/v1/auth/me"),
+  signup: (email, password, name) =>
+    request("/api/v1/auth/signup", {
+      method: "POST",
+      body: JSON.stringify({ email, password, name }),
+    }),
+  login: (email, password) =>
+    request("/api/v1/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
+  logout: () => request("/api/v1/auth/logout", { method: "POST" }),
 };
 
-/** The PDF endpoint needs the API key, so fetch it as a blob and save it. */
+/**
+ * The PDF endpoint is authenticated, and a plain link cannot carry the
+ * session in a way that also names the file, so fetch it and save the blob.
+ */
 export async function downloadPdf(id, filename) {
-  const res = await fetch(api.pdfUrl(id), { headers: { "X-API-Key": KEY } });
+  const res = await fetch(api.pdfUrl(id), { credentials: CREDENTIALS });
   if (!res.ok) throw new Error("The certificate could not be generated.");
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
