@@ -345,9 +345,11 @@ MOBILE_AUDIT = r"""
     if (path.indexOf('inset(50%') === 0) return true;
     const clip = (s.clip || '').split(' ').join('');
     if (clip === 'rect(0px,0px,0px,0px)') return true;
+    // Only the negative side. Pushing something to -9999px is a way of
+    // hiding it; sitting below the fold is not, and testing for that
+    // suppressed a real 188x40 target further down a page.
     const r = el.getBoundingClientRect();
-    return r.bottom < 0 || r.right < 0 ||
-           r.top > innerHeight || r.left > innerWidth;
+    return r.bottom < 0 || r.right < 0;
   };
 
   // 3. Tap targets below roughly 44px are hard to hit accurately.
