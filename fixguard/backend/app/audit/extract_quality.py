@@ -186,6 +186,12 @@ A11Y_AUDIT = r"""
     };
     return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
   };
+  // Returns null when no ancestor declares an opaque background. The previous
+  // version assumed white, which is usually right for body text and exactly
+  // wrong for light text: white-on-assumed-white measures 1.07:1 and gets
+  // reported as a serious failure on markup that is perfectly readable. Four
+  // such findings appeared on this project's own sign-in page, all of them
+  // white text sitting on a dark panel.
   const bgOf = (el) => {
     let n = el;
     while (n && n.nodeType === 1) {
@@ -193,7 +199,7 @@ A11Y_AUDIT = r"""
       if (c && c.a > 0.5) return c;
       n = n.parentElement;
     }
-    return { r: 255, g: 255, b: 255, a: 1 };
+    return null;
   };
 
   // Opacity on any ancestor makes text render lighter than its own colour
@@ -235,8 +241,19 @@ A11Y_AUDIT = r"""
     // burn all 120 checks on elements it then declines to judge.
     const alpha = effectiveAlpha(el) * (fg.a === undefined ? 1 : fg.a);
     if (alpha < 0.85) continue;
+    let bg = bgOf(el);
+    if (!bg) {
+      // Nothing up the tree declared an opaque background. Assuming white is
+      // right for dark text on a plain page, which is the common case and
+      // worth keeping. It is exactly wrong for light text: white-on-assumed-
+      // white measures about 1.07:1 and gets reported as serious on markup
+      // that is perfectly readable, which is what happened to four elements
+      // of white text on this project's own sign-in page. When the text is
+      // light and the background is unknown, say nothing.
+      if (lum(fg) > 0.5) continue;
+      bg = { r: 255, g: 255, b: 255, a: 1 };
+    }
     checked += 1;
-    const bg = bgOf(el);
     const shown = composite(fg, bg, alpha);
     const l1 = lum(shown), l2 = lum(bg);
     const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
