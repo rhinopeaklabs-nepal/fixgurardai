@@ -333,11 +333,28 @@ MOBILE_AUDIT = r"""
     });
   }
 
+  // Something clipped away is not on the screen to be tapped. The
+  // visually-hidden idiom - a tiny box with clip-path: inset(50%) or the
+  // legacy clip: rect(0,0,0,0) - is how a skip link stays reachable by
+  // keyboard and out of everyone else's way. Calling that an unhittable
+  // tap target penalises a site for doing the accessible thing, which this
+  // one did: FixGuard reported its own skip link as a 32x16 target.
+  const clippedAway = (el) => {
+    const s = getComputedStyle(el);
+    const path = (s.clipPath || '').split(' ').join('');
+    if (path.indexOf('inset(50%') === 0) return true;
+    const clip = (s.clip || '').split(' ').join('');
+    if (clip === 'rect(0px,0px,0px,0px)') return true;
+    const r = el.getBoundingClientRect();
+    return r.bottom < 0 || r.right < 0 ||
+           r.top > innerHeight || r.left > innerWidth;
+  };
+
   // 3. Tap targets below roughly 44px are hard to hit accurately.
   const placed = {};
   document.querySelectorAll('a[href], button, input[type=submit], [role="button"]')
     .forEach((el) => {
-      if (!visible(el)) return;
+      if (!visible(el) || clippedAway(el)) return;
       const r = el.getBoundingClientRect();
       const key = Math.round(r.top) + ':' + Math.round(r.left);
       if (placed[key]) return;
