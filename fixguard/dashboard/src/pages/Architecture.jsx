@@ -65,7 +65,7 @@ export default function Architecture() {
     <div className="mx-auto max-w-4xl px-5 py-10">
       <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900">
+          <h1 className="font-display text-2xl font-extrabold tracking-tight text-slate-900">
             Site architecture
           </h1>
           <p className="mt-1 max-w-xl text-slate-600">

@@ -51,12 +51,12 @@ export default function SignIn({ mode: initial }) {
         <div className="w-full max-w-sm">
           <Link
             to="/"
-            className="text-lg font-black tracking-tight text-brand"
+            className="font-display text-lg font-extrabold tracking-tight text-brand"
           >
             FixGuard AI
           </Link>
 
-          <h1 className="mt-8 text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="mt-8 font-display text-2xl font-extrabold tracking-tight text-slate-900">
             {isSignUp ? "Create your account" : "Sign in"}
           </h1>
           <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
@@ -173,7 +173,7 @@ export default function SignIn({ mode: initial }) {
         <p className="text-xs font-semibold uppercase tracking-wider text-brand">
           Pre-flight QA for AI Builder sites
         </p>
-        <h2 className="mt-4 max-w-md text-3xl font-black leading-tight tracking-tight text-white">
+        <h2 className="mt-4 max-w-md font-display text-3xl font-extrabold leading-tight tracking-tight text-white">
           Find what is broken before your customers do
         </h2>
         <p className="mt-4 max-w-md leading-relaxed text-slate-300">

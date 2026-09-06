@@ -79,24 +79,33 @@ export default function Compare() {
   return (
     <Wrap id={id}>
       <header className="mb-6">
-        <h1 className="text-2xl font-black tracking-tight text-slate-900">
-          What changed
+        <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+          Before and after
+        </p>
+        <h1 className="mt-1 break-all font-display text-2xl font-extrabold tracking-tight text-slate-900">
+          {data.target_url.replace(/^https?:\/\//, "")}
         </h1>
-        <p className="break-all text-sm text-slate-500">{data.target_url}</p>
       </header>
 
-      <div className={`rounded-2xl border-l-4 border-y border-r border-y-slate-200 border-r-slate-200 bg-white p-6 ${v.ring}`}>
-        <div className="flex flex-wrap items-center gap-3">
-          <h2 className="text-lg font-bold text-slate-900">{v.title}</h2>
+      {/* The whole point of running an audit twice is this one line, so it is
+          the largest thing on the page rather than a statistic inside a card
+          of statistics. */}
+      <div className={`overflow-hidden rounded-2xl border bg-white ${v.ring}`}>
+        <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 px-6 py-4">
+          <h2 className="font-display text-lg font-extrabold text-slate-900">
+            {v.title}
+          </h2>
           <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${v.chip}`}>
             {data.verdict}
           </span>
         </div>
 
-        <div className="mt-5 flex flex-wrap items-center gap-4">
+        <div className="flex flex-wrap items-end gap-x-6 gap-y-4 px-6 py-6">
           <Score label="Before" score={data.before.score} at={data.before.at} />
           <span
-            className={`text-2xl font-black ${up ? "text-emerald-600" : data.score_delta < 0 ? "text-red-600" : "text-slate-400"}`}
+            className={`pb-3 font-display text-3xl font-extrabold ${
+              up ? "text-emerald-500" : data.score_delta < 0 ? "text-red-500" : "text-slate-300"
+            }`}
             aria-hidden="true"
           >
             &rarr;
@@ -104,7 +113,7 @@ export default function Compare() {
           <Score label="After" score={data.after.score} at={data.after.at} big />
           {data.score_delta != null && data.score_delta !== 0 && (
             <span
-              className={`rounded-full px-3 py-1 text-lg font-black tabular-nums ${
+              className={`mb-2 rounded-full px-3.5 py-1 font-display text-xl font-extrabold tabular-nums ${
                 up ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
               }`}
             >
@@ -114,7 +123,9 @@ export default function Compare() {
           )}
         </div>
 
-        <p className="mt-4 leading-relaxed text-slate-700">{data.headline}</p>
+        <p className="border-t border-slate-100 bg-slate-50 px-6 py-4 leading-relaxed text-slate-700">
+          {data.headline}
+        </p>
       </div>
 
       <Section title="By category">
@@ -124,12 +135,32 @@ export default function Compare() {
               key={c.category}
               className="flex items-center gap-3 border-b border-slate-100 px-4 py-2.5 last:border-0"
             >
-              <span className="flex-1 text-sm text-slate-700">{c.label}</span>
+              <span className="w-32 shrink-0 truncate text-sm text-slate-700">
+                {c.label}
+              </span>
+              {/* Two bars on one scale: the move is read rather than
+                  subtracted. */}
+              <span className="hidden h-1.5 flex-1 items-center gap-1 sm:flex" aria-hidden>
+                <span className="h-full flex-1 overflow-hidden rounded-full bg-slate-100">
+                  <span
+                    className="block h-full rounded-full bg-slate-300"
+                    style={{ width: `${c.before ?? 0}%` }}
+                  />
+                </span>
+                <span className="h-full flex-1 overflow-hidden rounded-full bg-slate-100">
+                  <span
+                    className={`block h-full rounded-full ${
+                      (c.delta ?? 0) < 0 ? "bg-red-500" : "bg-emerald-500"
+                    }`}
+                    style={{ width: `${c.after ?? 0}%` }}
+                  />
+                </span>
+              </span>
               <span className="w-10 text-right text-sm tabular-nums text-slate-400">
                 {c.before ?? "--"}
               </span>
-              <span className="text-slate-300">&rarr;</span>
-              <span className="w-10 text-right text-sm font-semibold tabular-nums text-slate-700">
+              <span className="text-slate-300" aria-hidden>&rarr;</span>
+              <span className="w-10 text-right font-display text-sm font-extrabold tabular-nums text-slate-800">
                 {c.after ?? "--"}
               </span>
               <span
@@ -176,7 +207,7 @@ function Score({ label, score, at, big }) {
       <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
         {label}
       </div>
-      <div className={`font-black tabular-nums ${big ? "text-4xl" : "text-3xl"} text-slate-900`}>
+      <div className={`font-display font-extrabold tabular-nums ${big ? "text-5xl" : "text-4xl"} text-slate-900`}>
         {score ?? "--"}
       </div>
       {at && (
@@ -230,7 +261,7 @@ function FindingList({ title, findings, tone, empty }) {
 function Section({ title, children }) {
   return (
     <section className="mt-8">
-      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">
+      <h2 className="mb-3 font-display text-lg font-extrabold tracking-tight text-slate-900">
         {title}
       </h2>
       {children}
@@ -240,10 +271,10 @@ function Section({ title, children }) {
 
 function Wrap({ id, children }) {
   return (
-    <div className="mx-auto max-w-3xl px-5 py-10">
+    <div className="mx-auto max-w-4xl px-5 py-8 lg:py-10">
       <Link
         to={`/a/${id}`}
-        className="mb-6 inline-block text-sm font-medium text-brand hover:underline"
+        className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-brand"
       >
         &larr; Back to the report
       </Link>

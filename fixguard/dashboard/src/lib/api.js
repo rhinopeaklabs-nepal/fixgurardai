@@ -77,7 +77,7 @@ export const api = {
     request(
       `/api/v1/audits/${id}/compare` + (baseline ? `?baseline=${baseline}` : ""),
     ),
-  listAudits: () => request("/api/v1/audits?limit=25"),
+  listAudits: (limit = 25) => request(`/api/v1/audits?limit=${limit}`),
   quota: () => request("/api/v1/quota"),
   share: (id) => request(`/api/v1/audits/${id}/share`, { method: "POST" }),
   publicReport: (token, mode = "client") =>

@@ -263,36 +263,50 @@ export default function AuditDetail() {
         </p>
       )}
 
+      {/* Four equally-weighted buttons made every one of them look optional
+          and none of them look like the thing to do next. The certificate is
+          the deliverable; the rest are follow-ups. */}
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">Site Health Report</h1>
-          <p className="break-all text-sm text-slate-500">{run.target_url}</p>
+        <div className="min-w-0">
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+            Site health report
+          </p>
+          <h1 className="mt-1 break-all font-display text-2xl font-extrabold tracking-tight text-slate-900">
+            {run.target_url.replace(/^https?:\/\//, "")}
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            {run.completed_at
+              ? new Date(run.completed_at).toLocaleString()
+              : "In progress"}
+            {run.duration_ms ? ` · ${(run.duration_ms / 1000).toFixed(1)}s` : ""}
+            {run.pages_audited ? ` · ${run.pages_audited} page${run.pages_audited === 1 ? "" : "s"}` : ""}
+          </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={getPdf}
             disabled={pdfBusy}
-            className="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
+            className="rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-dark disabled:opacity-50"
           >
-            {pdfBusy ? "Building..." : "Download certificate"}
+            {pdfBusy ? "Building…" : "Download certificate"}
           </button>
           <button
             onClick={makeShare}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
-            {copied ? "Link copied" : shareUrl ? "Copy share link" : "Create share link"}
+            {copied ? "Link copied" : shareUrl ? "Copy share link" : "Share"}
           </button>
           <Link
             to={`/a/${id}/compare`}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            className="rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
           >
-            Compare to last run
+            Compare
           </Link>
           <button
             onClick={getBadge}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            className="rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
           >
-            Get badge
+            Badge
           </button>
         </div>
       </div>
@@ -350,7 +364,7 @@ export default function AuditDetail() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-[1fr_1.1fr]">
         <div className="rounded-2xl border border-slate-200 bg-white p-6">
           <ScoreDial
             score={run.health_score}
@@ -366,8 +380,8 @@ export default function AuditDetail() {
           )}
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-6">
-          <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">
-            Breakdown
+          <h3 className="mb-4 text-xs font-bold uppercase tracking-wide text-slate-500">
+            How the score is made up
           </h3>
           <Breakdown breakdown={sb.breakdown} />
         </div>
@@ -780,9 +794,12 @@ export default function AuditDetail() {
 
 function Shell({ children }) {
   return (
-    <div className="mx-auto max-w-3xl px-5 py-10">
-      <Link to="/" className="mb-6 inline-block text-sm font-medium text-brand hover:underline">
-        &larr; New audit
+    <div className="mx-auto max-w-4xl px-5 py-8 lg:py-10">
+      <Link
+        to="/"
+        className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-brand"
+      >
+        <span aria-hidden>&larr;</span> New audit
       </Link>
       {children}
     </div>
@@ -791,16 +808,18 @@ function Shell({ children }) {
 
 function Section({ title, children }) {
   return (
-    <section className="mt-8">
-      <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">{title}</h2>
-      <div className="space-y-3">{children}</div>
+    <section className="mt-9">
+      <h2 className="mb-3 font-display text-lg font-extrabold tracking-tight text-slate-900">
+        {title}
+      </h2>
+      <div className="space-y-2.5">{children}</div>
     </section>
   );
 }
 
 function Empty({ children }) {
   return (
-    <p className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-6 text-center text-sm text-slate-400">
+    <p className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500">
       {children}
     </p>
   );
@@ -834,7 +853,7 @@ function Metric({ label, value, band }) {
       <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
         {label}
       </div>
-      <div className={`text-xl font-bold tabular-nums ${BAND_STYLE[band] || "text-slate-700"}`}>
+      <div className={`font-display text-xl font-extrabold tabular-nums ${BAND_STYLE[band] || "text-slate-700"}`}>
         {value}
       </div>
       <div className="text-[11px] text-slate-400">

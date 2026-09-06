@@ -43,8 +43,12 @@ export default function Nav() {
 
   return (
     <nav className="border-b border-slate-200 bg-white">
-      <div className="mx-auto flex max-w-4xl items-center gap-1 px-5">
-        <span className="mr-4 py-3 font-black tracking-tight text-brand">
+      {/* Matched to the audit console, which is the widest page and the one
+          people land on. Report pages stay narrower for reading width and sit
+          centred inside this, which is the usual relationship between chrome
+          and content rather than a misalignment. */}
+      <div className="mx-auto flex max-w-6xl items-center gap-1 px-5">
+        <span className="mr-4 py-3 font-display font-extrabold tracking-tight text-brand">
           FixGuard AI
         </span>
 
