@@ -51,7 +51,7 @@ export default function SignIn({ mode: initial }) {
         <div className="w-full max-w-sm">
           <Link
             to="/"
-            className="font-display text-lg font-extrabold tracking-tight text-brand"
+            className="inline-flex min-h-11 items-center font-display text-lg font-extrabold tracking-tight text-brand"
           >
             FixGuard AI
           </Link>
@@ -109,7 +109,7 @@ export default function SignIn({ mode: initial }) {
                 <button
                   type="button"
                   onClick={() => setReveal((v) => !v)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded px-2 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                  className="absolute right-1 top-1/2 grid min-h-11 min-w-11 -translate-y-1/2 place-items-center rounded px-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-800"
                 >
                   {reveal ? "Hide" : "Show"}
                 </button>
@@ -154,7 +154,7 @@ export default function SignIn({ mode: initial }) {
                 setMode(isSignUp ? "signin" : "signup");
                 setError(null);
               }}
-              className="font-semibold text-brand hover:underline"
+              className="inline-flex min-h-11 items-center font-semibold text-brand hover:underline"
             >
               {isSignUp ? "Sign in" : "Create one"}
             </button>
