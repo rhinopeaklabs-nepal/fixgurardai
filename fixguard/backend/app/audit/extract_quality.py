@@ -196,6 +196,29 @@ A11Y_AUDIT = r"""
     return { r: 255, g: 255, b: 255, a: 1 };
   };
 
+  // Opacity on any ancestor makes text render lighter than its own colour
+  // says, and the audit runs while a page with scroll-reveal animations is
+  // still fading its sections in. Ignoring that reported text at a genuine
+  // 5.5:1 as a 3.6:1 failure - fourteen of them on one site, thirteen of
+  // which did not exist. Confident false findings are the most expensive
+  // thing this tool can produce, so the effective colour is composited
+  // through the cumulative opacity before anything is measured.
+  const effectiveAlpha = (el) => {
+    let a = 1, n = el;
+    while (n && n.nodeType === 1) {
+      const o = parseFloat(getComputedStyle(n).opacity);
+      if (!isNaN(o)) a *= o;
+      n = n.parentElement;
+    }
+    return a;
+  };
+  const composite = (fg, bg, a) => ({
+    r: fg.r * a + bg.r * (1 - a),
+    g: fg.g * a + bg.g * (1 - a),
+    b: fg.b * a + bg.b * (1 - a),
+    a: 1,
+  });
+
   let checked = 0;
   const textish = document.querySelectorAll(
     'p,span,a,li,h1,h2,h3,h4,h5,h6,label,button,td');
@@ -207,9 +230,15 @@ A11Y_AUDIT = r"""
     const s = getComputedStyle(el);
     const fg = parseRGB(s.color);
     if (!fg) continue;
+    // Text mid-fade is not a contrast failure; it is a moment. Skipped
+    // before the budget is spent, or a page that animates everything would
+    // burn all 120 checks on elements it then declines to judge.
+    const alpha = effectiveAlpha(el) * (fg.a === undefined ? 1 : fg.a);
+    if (alpha < 0.85) continue;
     checked += 1;
     const bg = bgOf(el);
-    const l1 = lum(fg), l2 = lum(bg);
+    const shown = composite(fg, bg, alpha);
+    const l1 = lum(shown), l2 = lum(bg);
     const ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
     const size = parseFloat(s.fontSize);
     const bold = parseInt(s.fontWeight, 10) >= 700;
