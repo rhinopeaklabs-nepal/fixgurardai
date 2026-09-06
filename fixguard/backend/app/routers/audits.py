@@ -89,25 +89,6 @@ def identity(request: Request) -> dict:
     )
 
 
-def client_bucket(request: Request, api_key: str = Depends(require_key)) -> str:
-    """The identity a rate limit should be counted against.
-
-    Counting per API key made sense when the key was per-user. The dashboard
-    now ships one shared key in its bundle, so per-key counting means the
-    first visitor of the hour spends everyone else's quota - including a
-    judge's, halfway through evaluating the tool. Without accounts, the
-    closest honest unit is the client itself.
-
-    X-Real-IP is set by our own nginx from the address it resolved, never
-    copied from the incoming request, so a caller cannot widen its own quota
-    by sending the header. A request that did not come through nginx has no
-    such header and falls back to the key, which is the old behaviour and
-    still bounded.
-    """
-    ip = (request.headers.get("x-real-ip") or "").strip()
-    return f"ip:{ip}" if ip else f"key:{api_key}"
-
-
 def _enforce_rate_limit(bucket: str) -> int:
     allowed, remaining, retry = ratelimit.check_and_record(bucket)
     if not allowed:
@@ -175,7 +156,7 @@ async def start_audit(
 @router.post("/audits", response_model=schemas.StartAuditResponse, status_code=201)
 async def start_audit_alias(
     payload: schemas.StartAuditRequest,
-    bucket: str = Depends(client_bucket),
+    who: dict = Depends(identity),
 ) -> schemas.StartAuditResponse:
     return await start_audit(payload, who)
 
@@ -196,7 +177,7 @@ async def retry_audit(
             "Only a failed audit can be retried.",
             audit_id,
         )
-    remaining = _enforce_rate_limit(bucket)
+    remaining = _enforce_rate_limit(who["bucket"])
     modules = run.get("modules_selected") or schemas.ALL_MODULES
     new_id = runner.start(
         run["target_url"],

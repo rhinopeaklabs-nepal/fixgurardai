@@ -16,6 +16,7 @@ import sys
 
 sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent.parent))
 
+import _scopecheck  # noqa: E402
 from app import accounts, dns_health, scope, scoring  # noqa: E402
 
 results: list[tuple[str, bool, str]] = []
@@ -116,6 +117,71 @@ def scope_tests() -> None:
           f"MIN_CONFIDENCE={scope.MIN_CONFIDENCE}; an unjustified match scores 0.4")
 
 
+# ------------------------------------------------------------------- scopes
+BUG_SHAPE = """
+def start(payload, who):
+    return payload
+
+def handler(payload, person):
+    return start(payload, who)
+"""
+
+# The constructs that legitimately bind a name somewhere the reader cannot see
+# on the same line. A checker that flags any of these is worse than none.
+LEGAL_SHAPES = """
+import os
+TOP = 1
+
+def outer(items):
+    total = sum(x for x in items if x)
+
+    def inner(y=TOP):
+        return y + total + os.sep.count("/")
+
+    try:
+        return inner()
+    except ValueError as exc:
+        return str(exc)
+
+class C:
+    attr = TOP
+
+    def m(self):
+        return self.attr
+"""
+
+
+def scope_resolution_tests() -> None:
+    """Names a handler reads have to be bound somewhere.
+
+    Two routes shipped broken exactly this way: the POST /audits alias read
+    `who` and the retry route read `bucket`, both left behind by a rename.
+    Nothing caught them, because a NameError inside a request handler is a
+    runtime event - the module still imports, and every test that did not
+    call that one route stayed green.
+    """
+    found = _scopecheck.scan_source(BUG_SHAPE)
+    check(
+        "U-20  A renamed-away parameter is caught",
+        len(found) == 1 and "'who'" in found[0],
+        found[0] if found else "the checker saw nothing",
+    )
+
+    quiet = _scopecheck.scan_source(LEGAL_SHAPES)
+    check(
+        "U-21  Comprehensions, closures and except-as stay quiet",
+        not quiet,
+        "; ".join(quiet),
+    )
+
+    live = _scopecheck.scan("app")
+    check(
+        "U-22  No shipped function reads an unbound name",
+        not live,
+        "; ".join(live[:4]),
+    )
+
+
 # ----------------------------------------------------------------- accounts
 def account_tests() -> None:
     pw = "a few ordinary words"
@@ -191,6 +257,8 @@ def main() -> int:
     dns_tests()
     print("\nscope")
     scope_tests()
+    print("\nscope resolution")
+    scope_resolution_tests()
     print("\naccounts")
     account_tests()
     print("\nscoring")

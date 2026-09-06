@@ -41,6 +41,27 @@ app.add_middleware(
     allow_headers=["X-API-Key", "Content-Type"],
 )
 
+# The public share and badge routes exist to be read from somebody else's
+# page - that is the entire point of an embeddable badge - so the allowlist
+# above, which is right for the credentialed dashboard routes, is wrong for
+# them. Without this the badge script fetches its own JSON and the browser
+# refuses to let it read the answer, which is what a visitor to the marketing
+# site actually saw: a badge that never filled in.
+#
+# The wildcard is safe here precisely because these routes carry no session:
+# the token in the path is the whole authorisation, and anyone holding it was
+# handed it deliberately. Credentials and a wildcard are mutually exclusive by
+# spec, so the credentials header is removed rather than left to contradict it.
+@app.middleware("http")
+async def public_routes_are_public(request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/api/v1/public/"):
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers.pop("Access-Control-Allow-Credentials", None)
+        response.headers["Vary"] = "Origin"
+    return response
+
+
 errors.register(app)
 
 app.include_router(auth.router)
