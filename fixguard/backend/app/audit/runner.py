@@ -58,6 +58,7 @@ def start(
     max_pages: int = 1,
     auth: dict[str, Any] | None = None,
     owner_id: str | None = None,
+    form_selector: str | None = None,
 ) -> str:
     mods = [m for m in (modules or ALL_MODULES) if m in ALL_MODULES] or ALL_MODULES
     run_id = str(uuid.uuid4())
@@ -66,7 +67,10 @@ def start(
         owner_id=owner_id,
     )
     _tasks[run_id] = asyncio.create_task(
-        _execute(run_id, target_url, test_email, mods, rate_key, max_pages, auth)
+        _execute(
+            run_id, target_url, test_email, mods, rate_key, max_pages, auth,
+            form_selector,
+        )
     )
     return run_id
 
@@ -79,6 +83,7 @@ async def _execute(
     rate_key: str | None = None,
     max_pages: int = 1,
     auth: dict[str, Any] | None = None,
+    form_selector: str | None = None,
 ) -> None:
     completed: list[str] = []
 
@@ -140,7 +145,7 @@ async def _execute(
                 result = await asyncio.wait_for(
                     run_audit(
                         target_url, test_email, progress, browser_modules,
-                        max_pages, auth,
+                        max_pages, auth, form_selector,
                     ),
                     timeout=budget,
                 )

@@ -8,7 +8,10 @@ import secrets
 from fastapi import APIRouter, Depends, Header, Query, Request
 from fastapi.responses import Response, StreamingResponse
 
-from .. import auth_session, compare, config, db, ratelimit, report_render, schemas
+from .. import (
+    accounts, auth_session, compare, config, db, ratelimit, report_render,
+    schemas,
+)
 from ..audit import runner
 from ..errors import FixGuardError
 from . import auth
@@ -155,6 +158,7 @@ async def start_audit(
         payload.modules,
         rate_key=who["bucket"],
         owner_id=who["owner_id"],
+        form_selector=payload.form_selector,
         max_pages=payload.max_pages,
         auth=auth,
     )
@@ -402,6 +406,57 @@ async def report_badge(audit_id: str, who: dict = Depends(identity)) -> dict:
             run.get("health_score"), run.get("grade") or ""
         ),
     }
+
+
+# --------------------------------------------------------------------------
+# Delete
+# --------------------------------------------------------------------------
+@router.delete("/audits/{audit_id}", status_code=200)
+async def delete_audit(audit_id: str, who: dict = Depends(identity)) -> dict:
+    """SRS 10.2: reports are kept until the person who made them removes one.
+
+    Answers AUDIT_NOT_FOUND when the audit belongs to somebody else, matching
+    every other read: a distinct "forbidden" would confirm that an id exists.
+    """
+    if not db.delete_run(audit_id, who["owner_id"]):
+        raise FixGuardError(
+            "AUDIT_NOT_FOUND", "The requested audit_id does not exist.", audit_id
+        )
+    return {"deleted": audit_id}
+
+
+@router.delete("/account/data", status_code=200)
+async def delete_my_data(who: dict = Depends(identity)) -> dict:
+    """SRS 10.4: erase everything this account has produced, keep the account.
+
+    Share links and geo rows follow their audit through ON DELETE CASCADE, so
+    a link handed to a client stops resolving at the same moment - which is
+    the point of asking for deletion.
+    """
+    return db.delete_everything_for(who["owner_id"])
+
+
+@router.delete("/account", status_code=200)
+async def delete_my_account(
+    request: Request, response: Response, who: dict = Depends(identity)
+) -> dict:
+    """The account itself, and everything it made.
+
+    Refused for the API-key identity: that owner is shared by every scripted
+    caller, so honouring it would delete work belonging to whoever else is
+    using the key.
+    """
+    if not who.get("user"):
+        raise FixGuardError(
+            "VALIDATION_ERROR",
+            "Only a signed-in account can be deleted. The API key identity is "
+            "shared, so removing it would take other callers' data with it.",
+        )
+    counts = db.delete_everything_for(who["owner_id"])
+    db.delete_account(who["user"]["id"])
+    accounts.end_session(request.cookies.get(auth.COOKIE))
+    response.delete_cookie(auth.COOKIE, path="/")
+    return {"deleted_account": True, **counts}
 
 
 # --------------------------------------------------------------------------

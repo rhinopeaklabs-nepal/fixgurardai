@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../lib/api";
+import FourProducts from "../components/FourProducts";
 
 /**
  * The architecture of the site under audit.
@@ -32,6 +33,11 @@ const KINDS = {
 const kindOf = (k) => KINDS[k] || KINDS.other;
 
 export default function Architecture() {
+  // Two different architectures live on this page and they are not the same
+  // question. "What is this site built from" is about the audited site; "how
+  // is FixGuard built" is about this product, and SRS 11.3 asks for it to be
+  // shown live. One used to replace the other; they are tabs now.
+  const [view, setView] = useState("site");
   const [audits, setAudits] = useState([]);
   const [auditId, setAuditId] = useState("");
   const [run, setRun] = useState(null);
@@ -92,6 +98,28 @@ export default function Architecture() {
         )}
       </header>
 
+      <div className="mb-5 inline-flex rounded-lg border border-slate-300 bg-white p-0.5">
+        {[
+          ["site", "The audited site"],
+          ["fixguard", "How FixGuard is built"],
+        ].map(([v, label]) => (
+          <button
+            key={v}
+            onClick={() => setView(v)}
+            aria-pressed={view === v}
+            className={`rounded-md px-4 py-1.5 text-sm font-medium transition ${
+              view === v ? "bg-brand text-white" : "text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {view === "fixguard" && <FourProducts />}
+
+      {view === "site" && (
+        <>
       {error && <p className="rounded-xl bg-red-50 px-4 py-3 text-red-700">{error}</p>}
 
       {!error && audits.length === 0 && (
@@ -108,8 +136,8 @@ export default function Architecture() {
       )}
 
       {map?.measured && <SiteMap map={map} run={run} />}
-
-      <BuiltWith />
+        </>
+      )}
     </div>
   );
 }
@@ -497,61 +525,6 @@ function FormRow({ form: f }) {
         </div>
       )}
     </div>
-  );
-}
-
-function BuiltWith() {
-  const [open, setOpen] = useState(false);
-  const [health, setHealth] = useState(null);
-
-  useEffect(() => {
-    if (!open) return;
-    api.health().then(setHealth).catch(() => setHealth(false));
-  }, [open]);
-
-  const rows = [
-    ["VPS", "FastAPI, Playwright Chromium, SQLite, PDF rendering"],
-    ["Web Hosting", "This dashboard, audit reports, public shared reports"],
-    ["AI Builder", "Marketing page and lead capture"],
-    ["Hostinger Agent", "Provisioning, VPS diagnostics, deployment debugging"],
-  ];
-
-  return (
-    <section className="mt-10 border-t border-slate-200 pt-5">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        className="text-sm font-medium text-slate-500 hover:text-slate-800"
-      >
-        {open ? "Hide" : "How FixGuard itself is built"}
-      </button>
-
-      {open && (
-        <div className="mt-3 space-y-2">
-          <p className="text-sm text-slate-600">
-            FixGuard runs on four Hostinger products.{" "}
-            {health === false
-              ? "The audit engine is not responding right now."
-              : health
-                ? `The engine is up: ${health.service} v${health.version}.`
-                : "Checking the engine…"}
-          </p>
-          <ul className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-            {rows.map(([name, role]) => (
-              <li
-                key={name}
-                className="flex flex-wrap gap-x-3 border-b border-slate-100 px-4 py-2 last:border-0"
-              >
-                <span className="w-32 shrink-0 text-sm font-semibold text-slate-800">
-                  {name}
-                </span>
-                <span className="text-sm text-slate-600">{role}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </section>
   );
 }
 

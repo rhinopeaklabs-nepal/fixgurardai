@@ -280,6 +280,49 @@ def list_runs(limit: int = 25, owner_id: str | None = None) -> list[dict[str, An
     return [dict(r) for r in rows]
 
 
+def delete_run(run_id: str, owner_id: str) -> bool:
+    """Remove one audit and everything hanging off it.
+
+    Scoped by owner in the WHERE clause rather than by checking first and
+    deleting after: the check-then-act version deletes somebody else's audit
+    if ownership changes between the two statements, and costs an extra query
+    to be wrong.
+    """
+    with get_conn() as conn:
+        cur = conn.execute(
+            "DELETE FROM audit_runs WHERE id = ? AND owner_id IS NOT NULL "
+            "AND owner_id = ?",
+            (run_id, owner_id),
+        )
+        return (cur.rowcount or 0) > 0
+
+
+def delete_everything_for(owner_id: str) -> dict[str, int]:
+    """SRS 10.4: erase this account's data on request.
+
+    Share links and geo rows go with their audit through ON DELETE CASCADE.
+    The account row is left to the caller, so this is usable both for "delete
+    my data" and for "delete my account".
+    """
+    with get_conn() as conn:
+        audits = conn.execute(
+            "DELETE FROM audit_runs WHERE owner_id IS NOT NULL AND owner_id = ?",
+            (owner_id,),
+        ).rowcount or 0
+        prompts = conn.execute(
+            "DELETE FROM surgical_prompts WHERE owner_id IS NOT NULL "
+            "AND owner_id = ?",
+            (owner_id,),
+        ).rowcount or 0
+    return {"audits": audits, "prompts": prompts}
+
+
+def delete_account(user_id: str) -> None:
+    """The user row, and every session it owns via cascade."""
+    with get_conn() as conn:
+        conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+
+
 def insert_share_link(token: str, audit_id: str, created_at: str, expires_at: str) -> None:
     with get_conn() as conn:
         conn.execute(

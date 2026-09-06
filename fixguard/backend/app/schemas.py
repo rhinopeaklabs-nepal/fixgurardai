@@ -58,8 +58,9 @@ class StartAuditRequest(BaseModel):
 
     domain_url: str = Field(..., max_length=2048)
     modules: list[Module] = Field(default_factory=lambda: list(ALL_MODULES))
+    # FR-2.1. Matched against the forms found on the page; a selector that
+    # matches nothing falls back to testing them all and says so in notes.
     form_selector: str | None = Field(default=None, max_length=200)
-    project_id: str | None = Field(default=None, max_length=64)
     test_email: str | None = Field(default=None, max_length=254)
     auth: AuthSpec | None = None
     max_pages: int = Field(

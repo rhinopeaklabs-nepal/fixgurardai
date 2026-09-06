@@ -728,6 +728,7 @@ async def run_audit(
     modules: list[str] | None = None,
     max_pages: int = 1,
     auth: dict[str, Any] | None = None,
+    form_selector: str | None = None,
 ) -> dict[str, Any]:
     """Run the selected modules. Raises RuntimeError with a stable code on failure.
 
@@ -735,6 +736,7 @@ async def run_audit(
     means run everything (SRS FR-X.1).
     """
     selected = set(modules or DEFAULT_MODULES)
+    audit_notes: list[str] = []
 
     async def emit(stage: str, message: str, percent: int | None = None) -> None:
         if progress:
@@ -902,6 +904,24 @@ async def run_audit(
             # ---- Module: forms -------------------------------------------
             if "form" in selected and not load_blocked_by_loop:
                 testable = [f for f in form_descs if f.get("visible")] or form_descs
+                # FR-2.1: narrow to one form when the caller named it. Matching
+                # is done here against what was already extracted rather than by
+                # re-querying the page, so a selector that matches nothing is
+                # reported as such instead of silently testing every form -
+                # which is the behaviour that made this parameter useless.
+                if form_selector:
+                    picked = [
+                        f for f in testable
+                        if form_selector in (f.get("selector") or "")
+                        or form_selector.lstrip("#.") in {f.get("id"), f.get("name")}
+                    ]
+                    if picked:
+                        testable = picked
+                    else:
+                        audit_notes.append(
+                            f"No form matched {form_selector!r}, so every form "
+                            "on the page was tested instead."
+                        )
                 testable = testable[:form_budget]
                 form_budget -= len(testable)
 
@@ -1181,6 +1201,7 @@ async def run_audit(
 
     return {
         "target_url": target_url,
+        "notes": audit_notes,
         "site_map": site_map,
         # Only the shape of the session is recorded. Cookie values never
         # reach the database, the API response, or a shared report.

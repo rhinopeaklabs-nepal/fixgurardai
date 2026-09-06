@@ -1,7 +1,7 @@
 # SRS Traceability Matrix
 
 Every requirement in `FixGuard-AI-SRS.md` mapped to its implementation status
-as of **4 September 2026** (Day 2 of 21).
+as of **6 September 2026** (Day 4 of 21).
 
 | | Meaning |
 |---|---|
@@ -175,8 +175,8 @@ minified production build. FixGuard reports the looping URL and mutation count.
 
 | SRS table | Status | Notes |
 |---|---|---|
-| `users` | **Cut** | SRS 3.2 lists authentication as out of scope for the MVP |
-| `projects` | **Cut** | Same |
+| `users` | **Done** | Built after the fact. SRS 3.2 puts authentication out of scope, and that was right until the history endpoint was found returning every audit anybody had run to whoever asked. Accounts exist so audits can be owned; the SRS should be read as superseded here. |
+| `projects` | **Cut** | No grouping above the account yet. `project_id` is still accepted by the API and ignored, which is worse than rejecting it - see the open gaps below. |
 | `audit_runs` | **Done** | Plus progress, modules, retry, reachability, summary, parsed errors |
 | `surgical_prompts` | **Done** | Real table |
 | `geo_ping_results` | **Done** | Real table, one row per region |
@@ -225,13 +225,19 @@ Error envelope per 8.3, with every spec code implemented plus
 
 | Product | SRS role | Status |
 |---|---|---|
-| AI Builder | Marketing site, lead capture, intake | **Not started** — Day 2 of the plan |
-| Web Hosting | Dashboard SPA, report pages | **Built, not deployed** |
-| VPS | Playwright, API, database | **Built, not deployed** |
+| AI Builder | Marketing site, lead capture, intake | **Not started.** Zero websites exist on the account; verified via the Hostinger API. |
+| Web Hosting | Dashboard SPA, report pages | **Not deployed.** The plan is active but holds no website; the dashboard is currently served from the VPS. |
+| VPS | Playwright, API, database | **Live** at https://fixguardai.online — engine, database, dashboard and TLS |
 | AI Agents | Log parsing, prompt generation, summaries | **Built** — deterministic engines, optional model |
 
-**Be precise about the removal test in a pitch.** Three products are
-load-bearing today. The intelligence layer exists and runs, but on FixGuard's
+**Be precise about the removal test in a pitch.** Two products are
+load-bearing today: the VPS and the agents. Web Hosting and AI Builder hold
+nothing, so removing either changes nothing - which is exactly what SRS 9.2
+says must not be true. This is the largest open gap in the project and it is
+a deployment task, not a build one: the dashboard is built and the AI Builder
+brief is written.
+
+Older note, kept because the reasoning still holds: The intelligence layer exists and runs, but on FixGuard's
 own engines rather than a Hostinger inference endpoint, because none is
 exposed to backends. Say that plainly; a technical judge will respect it more
 than an overclaim.
@@ -261,3 +267,31 @@ than an overclaim.
 | Multi-page scans | Follows internal links and scores each page, with one shared form budget so a large site cannot trigger dozens of real submissions |
 | Site architecture map | The `/architecture` page maps the *audited* site: composition, detected libraries, every third-party host grouped by purpose, forms and where they send, content outline, link map |
 | Authenticated auditing | Session handoff rather than credentials. Verifies the session before trusting results, refuses sign-out and destructive links, keeps form submission opt-in, and stores cookie names but never values |
+
+
+---
+
+## Open gaps as of 6 September
+
+Listed because a traceability matrix that only records what was finished is a
+marketing document.
+
+| Gap | Where it bites |
+|---|---|
+| **Web Hosting holds no website** | SRS 9.1 gives it the dashboard and report pages; SRS 9.2's removal test fails for it today |
+| **AI Builder holds no website** | Same, for the marketing and intake role |
+| **No pitch video** | SRS 3.3 success criterion |
+| `form_selector` accepted and ignored | FR-2.1. A parameter that changes nothing is worse than one that is rejected |
+| `project_id` accepted and ignored | Same shape, and `projects` was never built |
+| No delete anywhere | SRS 10.2 says audits are retained "user can delete"; 10.4 promises deletion on request. No endpoint exists |
+| One shared API key | SRS 10.1 asks for per-user keys, stored hashed, rotatable from the dashboard. Now that accounts exist this is buildable and was not before |
+| Geo-ping measures one region | FR-3.4 asks for three. Documented at every surface rather than faked |
+| No load testing | SRS 11.1 lists locust. Unit and end-to-end suites exist; load does not |
+
+## Where the implementation deliberately diverges from the SRS
+
+| SRS says | What was built | Why |
+|---|---|---|
+| 3.2: authentication out of scope | Accounts, sessions, per-user ownership | The alternative was one visitor seeing another's list of audited sites |
+| 10.4: "public-facing pages only — no authenticated/login-gated site testing" | Session-handoff auditing behind a login | Requested, and built without ever handling a password. The SRS sentence predates the feature |
+| 11.3: `/architecture` shows the 4-product diagram | It shows the *audited* site, with the 4-product diagram on a second tab | Mapping the audited site turned out to be one of the most useful outputs. The SRS item is met by the tab |

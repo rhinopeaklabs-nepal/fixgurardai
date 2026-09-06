@@ -115,6 +115,11 @@ export const api = {
       body: JSON.stringify({ email, password }),
     }),
   logout: () => request("/api/v1/auth/logout", { method: "POST" }),
+
+  // SRS 10.2 and 10.4. Deleting an audit takes its share link with it, so a
+  // link already handed to a client stops resolving - which is the point.
+  deleteAudit: (id) => request(`/api/v1/audits/${id}`, { method: "DELETE" }),
+  deleteMyData: () => request("/api/v1/account/data", { method: "DELETE" }),
 };
 
 /**

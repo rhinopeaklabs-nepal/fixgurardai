@@ -136,6 +136,34 @@ def main() -> int:
     s, _ = call(anon, "GET", "/api/v1/audits", key=KEY)
     check("A-14  The API key still authenticates scripted callers", s == 200, f"http={s}")
 
+    # ---- deletion --------------------------------------------------------
+    s, b = call(alice, "POST", "/api/v1/audits/start",
+                {"domain_url": "http://127.0.0.1:8080/good.html",
+                 "i_own_this_site": True, "max_pages": 1})
+    victim = b.get("audit_id")
+
+    s, b = call(bob, "DELETE", f"/api/v1/audits/{victim}")
+    check("A-17  One account cannot delete another's audit",
+          s == 404 and code_of(b) == "AUDIT_NOT_FOUND", f"http={s} code={code_of(b)}")
+
+    s, _ = call(alice, "GET", f"/api/v1/audits/{victim}")
+    check("A-18  ...and the refused delete did not remove it", s == 200, f"http={s}")
+
+    s, _ = call(alice, "DELETE", f"/api/v1/audits/{victim}")
+    s2, _ = call(alice, "GET", f"/api/v1/audits/{victim}")
+    check("A-19  The owner can delete their own audit, and it is gone",
+          s == 200 and s2 == 404, f"delete={s} read_back={s2}")
+
+    s, b = call(alice, "DELETE", "/api/v1/account/data")
+    s2, b2 = call(alice, "GET", "/api/v1/audits")
+    check("A-20  Erasing account data empties the history but keeps the account",
+          s == 200 and s2 == 200 and (b2.get("audits") or []) == [],
+          f"erase={s} remaining={len(b2.get('audits') or [])}")
+
+    s, b = call(anon, "DELETE", "/api/v1/account", key=KEY)
+    check("A-21  The shared API key identity cannot delete an account",
+          s == 400, f"http={s}")
+
     # ---- sign out --------------------------------------------------------
     s, _ = call(alice, "POST", "/api/v1/auth/logout")
     s2, b2 = call(alice, "GET", "/api/v1/auth/me")

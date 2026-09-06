@@ -15,6 +15,7 @@ export default function AuditDetail() {
   const [copied, setCopied] = useState(false);
   const [badge, setBadge] = useState(null);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const esRef = useRef(null);
 
   useEffect(() => {
@@ -258,6 +259,20 @@ export default function AuditDetail() {
     (run.parsed_errors || []).map((x) => [x.message, x]),
   );
 
+  async function removeAudit() {
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    try {
+      await api.deleteAudit(id);
+      navigate("/history", { replace: true });
+    } catch (err) {
+      setError(err.message);
+      setConfirmDelete(false);
+    }
+  }
+
   return (
     <Shell>
       {error && (
@@ -310,6 +325,19 @@ export default function AuditDetail() {
             className="rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
           >
             Badge
+          </button>
+          {/* Two presses rather than a modal. The consequence is stated on the
+              button itself, which is the thing being read at the moment of
+              deciding - a dialog is read past. */}
+          <button
+            onClick={removeAudit}
+            className={`rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+              confirmDelete
+                ? "bg-red-600 text-white hover:bg-red-700"
+                : "text-slate-500 hover:bg-red-50 hover:text-red-700"
+            }`}
+          >
+            {confirmDelete ? "Delete for good — any share link stops working" : "Delete"}
           </button>
         </div>
       </div>
