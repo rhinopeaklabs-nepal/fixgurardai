@@ -77,6 +77,19 @@ def check(tid: str, name: str, passed: bool, detail: str = "") -> None:
           + (f"\n          {detail}" if detail else ""))
 
 
+def not_applicable(tid: str, name: str, reason: str) -> None:
+    """A scenario this system cannot satisfy by construction.
+
+    Recording one as a failure would leave the suite permanently red, and a
+    suite that is always red is a suite nobody reads - the next real
+    regression would land unnoticed. Recording it as a pass would be a lie
+    about what was verified. It is a third thing, and counted as such.
+    """
+    results.append((tid, name, None, reason))
+    print(f"  N/A   {tid}  {name}")
+    print(f"          {reason}")
+
+
 def clear_rate_limit() -> None:
     with sqlite3.connect(DB) as c:
         c.execute("DELETE FROM rate_events")
@@ -136,10 +149,11 @@ def main() -> int:
           f"error_code={r2.get('error_code')}")
 
     # T-04 ------------------------------------------------------------------
-    check("T-04", "Reply-To header verification",
-          False,
-          "CUT: form mail is sent by the host to the site owner and never "
-          "reaches FixGuard. Documented in docs/SRS-TRACEABILITY.md.")
+    not_applicable(
+        "T-04", "Reply-To header verification",
+        "Form mail is sent by the host directly to the site owner and never "
+        "reaches FixGuard, so there is no header for it to inspect. "
+        "Documented in docs/SRS-TRACEABILITY.md.")
 
     # T-05 ------------------------------------------------------------------
     _, r5, _ = run_audit(f"{TESTBED}/loop.html")
@@ -209,13 +223,18 @@ def main() -> int:
     # ----------------------------------------------------------------------
     clean_up()
 
-    passed = sum(1 for *_, ok, _ in results if ok)
+    passed = [t for t, _, ok, _ in results if ok is True]
+    failed = [t for t, _, ok, _ in results if ok is False]
+    skipped = [t for t, _, ok, _ in results if ok is None]
+
     print("=" * 62)
-    print(f"  {passed} of {len(results)} scenarios pass")
-    failed = [t for t, _, ok, _ in results if not ok]
+    print(f"  {len(passed)} of {len(passed) + len(failed)} applicable "
+          f"scenarios pass")
+    if skipped:
+        print(f"  not applicable: {', '.join(skipped)}")
     if failed:
-        print(f"  not passing: {', '.join(failed)}")
-    return 0 if passed == len(results) else 1
+        print(f"  FAILING: {', '.join(failed)}")
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":

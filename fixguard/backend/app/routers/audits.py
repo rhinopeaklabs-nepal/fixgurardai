@@ -30,8 +30,27 @@ def _load(audit_id: str) -> dict:
     return run
 
 
-def _enforce_rate_limit(api_key: str) -> int:
-    allowed, remaining, retry = ratelimit.check_and_record(api_key)
+def client_bucket(request: Request, api_key: str = Depends(require_key)) -> str:
+    """The identity a rate limit should be counted against.
+
+    Counting per API key made sense when the key was per-user. The dashboard
+    now ships one shared key in its bundle, so per-key counting means the
+    first visitor of the hour spends everyone else's quota - including a
+    judge's, halfway through evaluating the tool. Without accounts, the
+    closest honest unit is the client itself.
+
+    X-Real-IP is set by our own nginx from the address it resolved, never
+    copied from the incoming request, so a caller cannot widen its own quota
+    by sending the header. A request that did not come through nginx has no
+    such header and falls back to the key, which is the old behaviour and
+    still bounded.
+    """
+    ip = (request.headers.get("x-real-ip") or "").strip()
+    return f"ip:{ip}" if ip else f"key:{api_key}"
+
+
+def _enforce_rate_limit(bucket: str) -> int:
+    allowed, remaining, retry = ratelimit.check_and_record(bucket)
     if not allowed:
         wait = ratelimit.describe_wait(retry["seconds"])
         raise FixGuardError(
@@ -52,7 +71,7 @@ def _enforce_rate_limit(api_key: str) -> int:
 )
 async def start_audit(
     payload: schemas.StartAuditRequest,
-    api_key: str = Depends(require_key),
+    bucket: str = Depends(client_bucket),
 ) -> schemas.StartAuditResponse:
     auth: dict | None = None
     if payload.auth and (payload.auth.cookie_header or payload.auth.headers):
@@ -72,13 +91,13 @@ async def start_audit(
             "submit_forms": payload.auth.submit_forms,
         }
 
-    remaining = _enforce_rate_limit(api_key)
+    remaining = _enforce_rate_limit(bucket)
     test_email = payload.test_email or f"test-{secrets.token_hex(6)}@fixguard.test"
     audit_id = runner.start(
         payload.domain_url,
         test_email,
         payload.modules,
-        rate_key=api_key,
+        rate_key=bucket,
         max_pages=payload.max_pages,
         auth=auth,
     )
@@ -95,9 +114,9 @@ async def start_audit(
 @router.post("/audits", response_model=schemas.StartAuditResponse, status_code=201)
 async def start_audit_alias(
     payload: schemas.StartAuditRequest,
-    api_key: str = Depends(require_key),
+    bucket: str = Depends(client_bucket),
 ) -> schemas.StartAuditResponse:
-    return await start_audit(payload, api_key)
+    return await start_audit(payload, bucket)
 
 
 @router.post(
@@ -106,7 +125,7 @@ async def start_audit_alias(
     status_code=201,
 )
 async def retry_audit(
-    audit_id: str, api_key: str = Depends(require_key)
+    audit_id: str, bucket: str = Depends(client_bucket)
 ) -> schemas.StartAuditResponse:
     """NFR 5.3: failed audits are retryable in one click."""
     run = _load(audit_id)
@@ -116,14 +135,14 @@ async def retry_audit(
             "Only a failed audit can be retried.",
             audit_id,
         )
-    remaining = _enforce_rate_limit(api_key)
+    remaining = _enforce_rate_limit(bucket)
     modules = run.get("modules_selected") or schemas.ALL_MODULES
     new_id = runner.start(
         run["target_url"],
         f"test-{secrets.token_hex(6)}@fixguard.test",
         modules,
         retry_of=audit_id,
-        rate_key=api_key,
+        rate_key=bucket,
     )
     return schemas.StartAuditResponse(
         audit_id=new_id,
@@ -138,16 +157,16 @@ async def retry_audit(
 # Read
 # --------------------------------------------------------------------------
 @router.get("/audits", dependencies=[Depends(require_key)])
-async def list_audits(limit: int = 25, api_key: str = Depends(require_key)) -> dict:
+async def list_audits(limit: int = 25, bucket: str = Depends(client_bucket)) -> dict:
     return {
         "audits": db.list_runs(min(max(limit, 1), 100)),
-        "quota": ratelimit.quota(api_key),
+        "quota": ratelimit.quota(bucket),
     }
 
 
 @router.get("/quota")
-async def get_quota(api_key: str = Depends(require_key)) -> dict:
-    return ratelimit.quota(api_key)
+async def get_quota(bucket: str = Depends(client_bucket)) -> dict:
+    return ratelimit.quota(bucket)
 
 
 @router.get(

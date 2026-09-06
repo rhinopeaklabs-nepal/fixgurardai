@@ -1,0 +1,45 @@
+# The SRS acceptance scenarios, run against a real browser on every push.
+#
+# The suite drives Chromium rather than mocking it, so this runs inside the
+# same Playwright image the deployment uses. Pinning that image to the same
+# tag as backend/Dockerfile is deliberate: if the two drift, CI would be
+# testing a browser build that production does not have.
+
+name: acceptance
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    container:
+      image: mcr.microsoft.com/playwright/python:v1.62.0-noble
+      # Chromium keeps renderer surfaces in /dev/shm and dies partway through
+      # a page load on the 64 MB default, which would surface here as flaky
+      # audits rather than as the configuration problem it is.
+      options: --shm-size=1g
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: pip install --no-cache-dir -r requirements.txt
+        working-directory: fixguard/backend
+
+      - name: Run acceptance scenarios
+        run: python -m tests.run_acceptance
+        working-directory: fixguard/backend
+
+      - name: Upload server logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-logs
+          path: fixguard/backend/tests/_server_logs/
+          if-no-files-found: ignore

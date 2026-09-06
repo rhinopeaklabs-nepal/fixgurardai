@@ -1,5 +1,9 @@
 # FixGuard AI
 
+[![acceptance](https://github.com/rhinopeaklabs-nepal/fixgurardai/actions/workflows/acceptance.yml/badge.svg)](https://github.com/rhinopeaklabs-nepal/fixgurardai/actions/workflows/acceptance.yml)
+
+**Live: https://fixguardai.online**
+
 Pre-flight QA and prompt scoping for Hostinger AI Builder sites.
 
 Two things it does:
@@ -9,6 +13,23 @@ Two things it does:
    what the page claims.
 2. **Stops AI Builder wandering** — turns "make the booking button blue" into
    a prompt scoped so tightly the builder cannot rewrite the rest of your site.
+
+## Running the checks
+
+The acceptance suite drives a real browser against a local testbed of
+deliberately broken pages, because mocking Playwright would only prove the
+mock works. It starts both servers itself:
+
+```bash
+cd fixguard/backend
+python -m tests.run_acceptance
+```
+
+Eleven of the twelve SRS scenarios pass. T-04 is reported as *not
+applicable* rather than failing: it asks FixGuard to verify a header on
+mail the host sends directly to the site owner, which never reaches
+FixGuard at all. Deployment is covered in
+[`deploy/DEPLOYMENT.md`](deploy/DEPLOYMENT.md).
 
 Requirement-by-requirement status against the SRS, including what is
 deliberately cut and why, is in [`docs/SRS-TRACEABILITY.md`](docs/SRS-TRACEABILITY.md).
