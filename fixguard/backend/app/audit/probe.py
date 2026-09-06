@@ -577,7 +577,7 @@ async def walk_site(
     page,
     entry_url: str,
     emit: Callable[..., Awaitable[None]],
-    max_pages: int,
+    crawl_budget: int,
     authenticated: bool,
     seeds: list[str] | None = None,
     guessed: set[str] | None = None,
@@ -626,12 +626,18 @@ async def walk_site(
     visited_pages: list[dict[str, Any]] = []
     session_lost = False
 
-    while queue and len(routes_map) < max_pages - 1:
+    while queue and len(routes_map) < crawl_budget - 1:
         url, depth = queue.pop(0)
         path = urlparse(url).path or "/"
+        # Deliberately not phrased as "page N of M". This loop follows links
+        # to find out which ones lead somewhere, and it always walks further
+        # than the number of pages the user asked to have audited - a broken
+        # route cannot be reported without visiting it. Calling that "page 2
+        # of 6" to somebody who chose "just this page" reads as the setting
+        # having been ignored.
         await emit(
             "routes",
-            f"Page {len(routes_map) + 2} of up to {max_pages}: {path}",
+            f"Following links to check they work: {path}",
         )
 
         # A path FixGuard invented is a probe, not a promise the site made.
@@ -688,7 +694,7 @@ async def walk_site(
 
         # Keep discovering. A sitemap covers a marketing site; an app behind a
         # login usually has none, and its routes only exist as links.
-        if entry["ok"] and len(seen) < max_pages * 6:
+        if entry["ok"] and len(seen) < crawl_budget * 6:
             try:
                 for link in await page.evaluate(extract_js.EXTRACT_LINKS):
                     enqueue(link, depth + 1)
