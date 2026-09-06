@@ -223,3 +223,54 @@ a sentence in the pitch.
 If the rebuild comes out wrong in a way that needs more than three corrections,
 cut the third page. Home plus How it works is a complete marketing site; the
 limits can live as a section at the bottom of Home.
+
+---
+
+## Step 6 — the modern pass
+
+Run this **after** the site is correct. It changes treatment only, so the
+content and links above survive. One credit.
+
+> Keep every section, all copy, all links and all colours exactly as they are.
+> Change only the visual treatment, as follows.
+>
+> **Set the page title** to "FixGuard AI — find what is broken before your
+> customers do" and the meta description to "FixGuard opens your site in a real
+> browser, submits your forms, and reports what actually happens rather than
+> what the page claims." The title is currently empty.
+>
+> **Motion.** Every section fades up 16px as it scrolls into view, 400ms, ease
+> out, once only — never on a loop. Each element in a group starts 60ms after
+> the one before it. Everything must be fully visible in its final position
+> before any scrolling happens: nothing starts at opacity 0 waiting for a
+> scroll event. Respect prefers-reduced-motion by disabling all of it.
+>
+> **Animate the hero report card, once, on load.** The score dial counts up
+> from 0 to 49 over 900ms while its arc draws. The three findings then appear
+> one at a time, 120ms apart, each sliding up 12px. Each dark evidence block
+> reveals its text left to right, like a terminal printing. Total under 2.5
+> seconds, then it rests and stays rested. This is the product doing its job,
+> so it must look like measurement, not decoration.
+>
+> **Depth.** Cards get a large soft shadow: 0 24px 48px -24px rgba(15,23,42,0.18),
+> and lift 2px with a slightly stronger shadow on hover, 200ms. The hero report
+> card sits higher than everything else. No glass, no blur, no gradients on
+> anything except a single very faint radial wash behind the hero.
+>
+> **Type.** Push the hero headline larger — around 76px on desktop, tracking
+> -0.03em, line height 1.02. Section headings around 44px. Keep body text at a
+> comfortable reading size and no wider than 65 characters per line.
+>
+> **Rhythm.** Increase vertical padding between sections to roughly 128px on
+> desktop and 72px on mobile. More air, fewer boxes.
+>
+> **One pinned moment only.** In "How it works", pin the four steps while the
+> section scrolls, highlighting each step in turn as it becomes active. Just
+> this one section; nothing else pins.
+>
+> **Buttons.** Primary button lifts 1px and darkens to #0044CC on hover over
+> 150ms. Add a small right arrow that slides 3px right on hover.
+>
+> **Do not** add gradients on text, glassmorphism, emoji, stock photography,
+> looping background animation, marquees, or any purple. Do not centre content
+> that is currently left-aligned. Do not change any wording.
