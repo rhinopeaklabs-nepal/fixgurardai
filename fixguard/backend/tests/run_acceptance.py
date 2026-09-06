@@ -14,6 +14,7 @@ use it directly.
 from __future__ import annotations
 
 import os
+import socket
 import subprocess
 import sys
 import time
@@ -80,6 +81,32 @@ def main() -> int:
             print(f"\n----- {name} log -----")
             print(path.read_text(encoding="utf-8", errors="replace")[-4000:])
 
+    # Unit checks first. They need no servers and take under a second, so a
+    # broken threshold is reported immediately rather than after two minutes
+    # of browser work that was doomed before it started.
+    from tests import test_units
+
+    print("running unit checks...\n")
+    units = test_units.main()
+    print()
+
+    # Refuse to run if something already holds a port this suite needs.
+    # uvicorn logs the bind failure and keeps going, so the health check would
+    # be answered by whatever was already there - a stale server running older
+    # code, against a database in an unknown state. That produces failures
+    # that look like regressions and, worse, passes that mean nothing.
+    for port, what in ((8000, "the API"), (8080, "the testbed")):
+        probe = socket.socket()
+        probe.settimeout(1)
+        busy = probe.connect_ex(("127.0.0.1", port)) == 0
+        probe.close()
+        if busy:
+            raise SystemExit(
+                f"Port {port} is already in use, so {what} cannot start and "
+                "the suite would silently test whatever is there instead. "
+                "Stop it and run again."
+            )
+
     try:
         print("starting testbed...")
         spawn("testbed", [sys.executable, str(TESTBED)], TESTBED.parent)
@@ -108,7 +135,7 @@ def main() -> int:
         # about whether ownership still holds, and finding out both at once
         # is worth more than stopping at the first bad news.
         accounts = test_accounts.main()
-        return srs or accounts
+        return units or srs or accounts
     finally:
         for proc in procs:
             proc.terminate()

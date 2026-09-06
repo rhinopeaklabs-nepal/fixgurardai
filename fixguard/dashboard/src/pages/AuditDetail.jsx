@@ -245,7 +245,10 @@ export default function AuditDetail() {
   const mobile = run.mobile;
   const reachSeverity = !reach
     ? "info"
-    : reach.dns_resolved === false || reach.ip_blocked || reach.tls?.valid === false
+    : reach.dns_resolved === false ||
+        reach.ip_blocked ||
+        reach.tls?.valid === false ||
+        reach.dns_health?.addresses_disagree
       ? "critical"
       : reach.issues?.length
         ? "warning"
@@ -549,6 +552,45 @@ export default function AuditDetail() {
             )}
             <p className="mt-2 text-xs text-slate-400">{reach.multi_region_note}</p>
           </FindingCard>
+
+          {/* Shown whenever more than one address answered, because the point
+              is the comparison: a single row proves nothing, and the reader
+              needs to see that every address was actually asked. */}
+          {(reach.dns_health?.answers || []).length > 1 && (
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+              <p className="border-b border-slate-100 px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-slate-500">
+                What each address served
+              </p>
+              <ul className="divide-y divide-slate-100">
+                {reach.dns_health.answers.map((a) => (
+                  <li key={a.address} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5">
+                    <span className="font-mono text-xs text-slate-700">
+                      {a.address}
+                    </span>
+                    {a.error ? (
+                      <span className="font-mono text-xs text-red-600">
+                        {a.error}
+                      </span>
+                    ) : (
+                      <>
+                        <span className="font-mono text-xs text-slate-500">
+                          {a.status}
+                        </span>
+                        <span className="font-mono text-xs text-slate-400">
+                          {a.bytes?.toLocaleString()} bytes
+                        </span>
+                      </>
+                    )}
+                    {a.cert_covers_host === false && (
+                      <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700">
+                        certificate does not cover this name
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </Section>
       )}
 

@@ -26,7 +26,7 @@ import urllib.request
 from typing import Any
 from urllib.parse import urlparse
 
-from . import config
+from . import config, dns_health
 
 
 def _resolve(host: str) -> tuple[bool, list[str], str | None]:
@@ -209,6 +209,21 @@ async def probe(url: str) -> dict[str, Any]:
             "issues": ["Reachability checks timed out."],
         }
 
+    # Where the name points, and whether those places agree. Run separately
+    # from the probe above because that one only ever sees whichever address
+    # the resolver handed back - which is exactly how a half-broken domain
+    # passes a reachability check.
+    try:
+        result["dns_health"] = await asyncio.wait_for(
+            asyncio.to_thread(dns_health.inspect, url),
+            timeout=config.REACHABILITY_TIMEOUT_S * 3,
+        )
+    except Exception:  # noqa: BLE001 - a failed DNS inspection must not fail the audit
+        result["dns_health"] = {"checked": False}
+
+    for issue in (result.get("dns_health") or {}).get("issues") or []:
+        result.setdefault("issues", []).append(issue)
+
     result["regions_measured"] = 1
     result["regions_requested"] = 3
     result["multi_region_note"] = (
@@ -248,4 +263,16 @@ def score(reach: dict[str, Any]) -> tuple[int, list[str]]:
 
     if len(reach.get("redirect_chain") or []) >= 5:
         value -= 10
+
+    # A domain whose addresses disagree is broken for a share of visitors even
+    # though every check above passed - the probe reached whichever address the
+    # resolver chose, and that one worked. Scored heavily because the visible
+    # symptom is "the site is down for some people" while the owner sees a
+    # healthy site, which is the hardest kind of fault to act on.
+    dh = reach.get("dns_health") or {}
+    if dh.get("addresses_disagree"):
+        value -= 45
+    if dh.get("cert_mismatch_on"):
+        value -= 30
+
     return max(0, value), notes
