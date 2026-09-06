@@ -103,7 +103,7 @@ export const api = {
   // Accounts. /me answers 200 with a null user when signed out, so the
   // app can ask "who is this" on every load without treating the normal
   // signed-out state as an error.
-  me: () => request("/api/v1/auth/me"),
+  me: (opts) => request("/api/v1/auth/me", opts),
   signup: (email, password, name) =>
     request("/api/v1/auth/signup", {
       method: "POST",

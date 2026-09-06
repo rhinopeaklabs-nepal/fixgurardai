@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FixGuard AI - Site Health</title>
     <meta name="description" content="Catch broken forms, redirect loops and console errors on your AI Builder site before your customers do." />
+
+    <!-- Display face only. Body and evidence text use the system stacks, so
+         this is one request rather than three, and the page still reads
+         correctly during the swap. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div id="root"></div>

@@ -21,18 +21,26 @@ export function AuthProvider({ children }) {
   const [status, setStatus] = useState("checking");
 
   const refresh = useCallback(async () => {
+    // Every gated route waits on this answer, so a request that never settles
+    // leaves the entire app on a spinner with nothing to click. Giving up
+    // after a few seconds turns an unreachable API into the signed-out state,
+    // which at least shows the landing page and its sign-in button.
+    const abort = new AbortController();
+    const timer = setTimeout(() => abort.abort(), 6000);
     try {
-      const { user: u } = await api.me();
+      const { user: u } = await api.me({ signal: abort.signal });
       setUser(u || null);
       setStatus(u ? "signed-in" : "signed-out");
       return u || null;
     } catch {
-      // A failure here means the API is unreachable, not that the person is
-      // signed out - but there is nothing they can do with the app either
-      // way, and the sign-in screen is the honest place to land.
+      // Unreachable and signed-out are different things, and this cannot tell
+      // them apart. Signed-out is the safer of the two to assume: it never
+      // shows one person another's data, and it is recoverable by signing in.
       setUser(null);
       setStatus("signed-out");
       return null;
+    } finally {
+      clearTimeout(timer);
     }
   }, []);
 

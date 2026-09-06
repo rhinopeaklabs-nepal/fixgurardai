@@ -9,8 +9,13 @@ import { useAuth } from "../lib/auth";
  * sending people to a separate page to discover they are on the wrong one is
  * the most common way this flow wastes somebody's time.
  */
-export default function SignIn({ mode: initial = "signin" }) {
-  const [mode, setMode] = useState(initial);
+export default function SignIn({ mode: initial }) {
+  const location = useLocation();
+  // "Create account" on the landing page should land on the create form,
+  // not on sign-in with an extra click to find it.
+  const [mode, setMode] = useState(
+    initial || location.state?.mode || "signin",
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -20,7 +25,6 @@ export default function SignIn({ mode: initial = "signin" }) {
 
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const from = location.state?.from || "/";
 
   const isSignUp = mode === "signup";
