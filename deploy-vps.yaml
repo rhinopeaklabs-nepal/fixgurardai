@@ -1,0 +1,90 @@
+# FixGuard AI - deployed directly on the VPS, behind Coolify's Traefik.
+#
+# Coolify's proxy already owns 80/443 and already has a working Let's Encrypt
+# resolver, so this stack publishes no host port and instead asks Traefik to
+# route to it. That gives HTTPS without running a second ACME client and
+# without fighting over the ports.
+#
+#   docker compose -f deploy-vps.yaml up -d --build
+#
+# Requires .env next to this file with FIXGUARD_DOMAIN, FIXGUARD_API_KEY and
+# PUBLIC_BASE_URL.
+
+services:
+  api:
+    build:
+      context: ./fixguard/backend
+    restart: unless-stopped
+    environment:
+      FIXGUARD_API_KEY: ${FIXGUARD_API_KEY:?set FIXGUARD_API_KEY in .env}
+      # The dashboard is served from the same origin, so nothing is really
+      # cross-origin. Kept accurate anyway in case that ever changes.
+      CORS_ORIGINS: ${PUBLIC_BASE_URL:?set PUBLIC_BASE_URL in .env}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL}
+      MAX_CONCURRENT_AUDITS: "1"
+      AUDIT_HARD_TIMEOUT_S: "90"
+      FIXGUARD_DATA_DIR: /data
+    volumes:
+      - fixguard-data:/data
+    # 4 GB box, ~1 GB of it already Coolify. Capping Chromium means a runaway
+    # page is killed inside this container rather than taking the panel down.
+    mem_limit: 2g
+    # Chromium keeps renderer surfaces in /dev/shm and dies partway through a
+    # page load on Docker's 64 MB default - which FixGuard would then report
+    # as the audited site being broken.
+    shm_size: 1gb
+    networks:
+      - internal
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health')
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+
+  web:
+    build:
+      context: ./fixguard/dashboard
+      args:
+        # Empty means same origin; nginx in this image proxies /api to `api`.
+        VITE_API_BASE_URL: ""
+        VITE_API_KEY: ${FIXGUARD_API_KEY:?set FIXGUARD_API_KEY in .env}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    mem_limit: 256m
+    networks:
+      - internal
+      - coolify
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=coolify
+      - traefik.http.services.fixguard.loadbalancer.server.port=80
+
+      - traefik.http.routers.fixguard.rule=Host(`${FIXGUARD_DOMAIN:?set FIXGUARD_DOMAIN in .env}`)
+      - traefik.http.routers.fixguard.entrypoints=https
+      - traefik.http.routers.fixguard.tls=true
+      - traefik.http.routers.fixguard.tls.certresolver=letsencrypt
+      - traefik.http.routers.fixguard.service=fixguard
+
+      - traefik.http.routers.fixguard-http.rule=Host(`${FIXGUARD_DOMAIN}`)
+      - traefik.http.routers.fixguard-http.entrypoints=http
+      - traefik.http.routers.fixguard-http.middlewares=fixguard-https
+      - traefik.http.middlewares.fixguard-https.redirectscheme.scheme=https
+
+networks:
+  # Traefik only routes to containers it shares a network with.
+  coolify:
+    external: true
+  # The api container is deliberately not on the coolify network: nothing
+  # outside this stack has any business reaching it directly.
+  internal:
+    driver: bridge
+
+volumes:
+  fixguard-data:
