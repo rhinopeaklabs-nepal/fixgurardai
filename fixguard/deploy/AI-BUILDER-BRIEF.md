@@ -274,3 +274,71 @@ content and links above survive. One credit.
 > **Do not** add gradients on text, glassmorphism, emoji, stock photography,
 > looping background animation, marquees, or any purple. Do not centre content
 > that is currently left-aligned. Do not change any wording.
+
+---
+
+## Step 7 — warm editorial pass, and the audit fixes
+
+FixGuard audited this site on 6 September and scored it **76**. Accessibility
+came back **0**: fourteen contrast failures at 3.56:1 where 4.5:1 is the
+minimum. Mobile scored 65 on six tap targets under 44px and eighteen text
+elements rendering below 12px on a phone.
+
+Those failures and this redesign are the same job. The contrast failures exist
+because muted grey sits on a light ground; a warmer ground with darker text
+fixes them as a side effect. So this prompt does both.
+
+> Keep every section, all copy, all links and all page structure exactly as
+> they are. Change only the visual treatment and the specific accessibility
+> problems listed at the end.
+>
+> **Ground.** Replace the white page background with a warm off-white
+> `#F7F4EF`. Cards sit on `#FDFCFA` with a hairline `#E7E1D8` border and a
+> 20px radius. The effect to aim for is a warm editorial magazine, not a white
+> SaaS page. Sections alternate between the warm ground and `#FDFCFA`.
+>
+> **Keep the accent blue `#0055FF` exactly as it is.** Do not introduce orange
+> or terracotta. The three status colours - `#059669` pass, `#D97706` warning,
+> `#DC2626` critical - are reserved for status and must never be used for
+> decoration, buttons or headings.
+>
+> **Headings.** Section headings become uppercase, tightly tracked, two lines
+> where the text allows - the "EFFORTLESS PROCESS / EXCEPTIONAL RESULTS"
+> treatment. Archivo 800, letter-spacing -0.01em, around 40px. The hero
+> headline stays sentence case.
+>
+> **Hero.** Put the hero content on a large rounded panel, 24px radius, on the
+> warm ground, with the report card overlapping its right edge so it breaks
+> the panel boundary.
+>
+> **Floating findings cluster.** Behind and around the report card, add three
+> smaller finding cards, each rotated between -4 and +4 degrees, partially
+> overlapping, at lower opacity than the main card. They should read as a
+> stack of results, and must not cover any text in the main card.
+>
+> **Stat band.** Add a row of three stat tiles below the hero, the middle one
+> filled solid `#0055FF` with white text and the outer two on `#FDFCFA`:
+> - "29s" — average full audit, seven checks, one real browser
+> - "49 to 97" — one test site, after four scoped prompts
+> - "0" — invented numbers in any report
+>
+> **Category pills.** Where the checks are listed, render them as soft pills:
+> pale blue, pale green, pale amber and pale grey backgrounds with dark text
+> at 4.5:1 or better. Not solid colour, not white text on pale.
+>
+> **Fix these, measured on this site:**
+> - Every piece of body and muted text must reach 4.5:1 against its actual
+>   background. On `#F7F4EF` that means muted text no lighter than `#5B6470`
+>   and body text no lighter than `#3F4854`. Do not use `#94A3B8` for text
+>   anywhere.
+> - Every button, link-button and pill that can be tapped must be at least
+>   44px tall, including in the header.
+> - No text renders below 14px at a 390px viewport. Check the footer small
+>   print and any caption text.
+>
+> **Do not** add orange, gradients on text, glassmorphism, emoji, stock
+> photography, or looping animation. Do not change any wording.
+
+Re-run the audit afterwards. The score moving from 76 with accessibility at 0
+to something higher, on the tool's own marketing site, is a stronger demo than
+any screenshot.
