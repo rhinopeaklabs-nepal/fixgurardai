@@ -112,6 +112,7 @@ export default function Home() {
 
   const firstName = (user?.name || user?.email || "").split(/[\s@]/)[0];
   const typical = typicalDuration(history, maxPages);
+  const previousSites = [...new Set(history.map((a) => a.target_url))].slice(0, 20);
   const pageLabel = PAGE_CHOICES.find(([v]) => v === maxPages)?.[1] ?? "";
   const outOfQuota = quota?.remaining === 0;
 
@@ -152,8 +153,19 @@ export default function Home() {
               required
               autoFocus
               autoComplete="url"
+              list="audited-before"
               className="flex-1 rounded-xl border border-slate-300 px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand focus:ring-2 focus:ring-brand/20"
             />
+            {/* Re-auditing a site you already checked is the common case, and
+                it meant typing the address again from memory. A datalist
+                turns that into recognition rather than recall, and costs the
+                layout nothing: the field behaves exactly as before for a
+                site that has never been audited here. */}
+            <datalist id="audited-before">
+              {previousSites.map((site) => (
+                <option key={site} value={site} />
+              ))}
+            </datalist>
             <button
               type="submit"
               disabled={busy || outOfQuota}
