@@ -57,7 +57,8 @@ async def public_routes_are_public(request, call_next):
     response = await call_next(request)
     if request.url.path.startswith("/api/v1/public/"):
         response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers.pop("Access-Control-Allow-Credentials", None)
+        if "access-control-allow-credentials" in response.headers:
+            del response.headers["access-control-allow-credentials"]
         response.headers["Vary"] = "Origin"
     return response
 
