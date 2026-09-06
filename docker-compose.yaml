@@ -37,8 +37,12 @@ services:
     # makes it die partway through a page load, which FixGuard would then
     # report as the audited site being broken.
     shm_size: 1gb
-    expose:
-      - "8000"
+    # Deliberately no `expose`. Nothing outside this stack should reach the
+    # api directly - nginx in the web container proxies /api to it over the
+    # shared network, which needs no port declaration. Coolify also reads
+    # `expose` as "this service is web-facing" and generates a public domain
+    # for it, which is how the api ended up reachable on its own hostname
+    # with the rate limiting and real-IP resolution bypassed.
     healthcheck:
       test:
         - CMD
