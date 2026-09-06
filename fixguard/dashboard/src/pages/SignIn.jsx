@@ -170,7 +170,9 @@ export default function SignIn({ mode: initial }) {
 
       {/* ---------------- what it does ---------------- */}
       <aside className="hidden flex-col justify-center bg-slate-900 px-12 py-14 lg:flex">
-        <p className="text-xs font-semibold uppercase tracking-wider text-brand">
+        {/* On the dark panel the brand blue falls to 3.21:1. Same hue,
+            lightened until it reads, and only here. */}
+        <p className="text-xs font-semibold uppercase tracking-wider text-brand-on-dark">
           Pre-flight QA for AI Builder sites
         </p>
         <h2 className="mt-4 max-w-md font-display text-3xl font-extrabold leading-tight tracking-tight text-white">
@@ -201,7 +203,9 @@ export default function SignIn({ mode: initial }) {
               <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
               <div>
                 <p className="font-semibold text-white">{title}</p>
-                <p className="mt-0.5 text-sm leading-relaxed text-slate-400">
+                {/* On the dark panel the ramp inverts: 400 is 3.24:1 here,
+                    300 is 11.47:1. */}
+                <p className="mt-0.5 text-sm leading-relaxed text-slate-300">
                   {body}
                 </p>
               </div>

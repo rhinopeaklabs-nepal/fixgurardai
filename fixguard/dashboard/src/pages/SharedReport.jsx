@@ -331,7 +331,7 @@ function TechnicalDetail({ report }) {
                   {c.message}
                 </p>
                 {c.source_url && (
-                  <p className="mt-1 truncate font-mono text-[10px] text-slate-500">
+                  <p className="mt-1 truncate font-mono text-[10px] text-slate-300">
                     {c.source_url}
                     {c.line ? `:${c.line}` : ""}
                   </p>

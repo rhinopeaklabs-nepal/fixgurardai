@@ -3,8 +3,32 @@
 @theme {
   --color-brand: #0055ff;
   --color-brand-dark: #0044cc;
-  --color-ink: #0d1117;
-  --color-ink-soft: #4b5563;
+  /* On a dark ground the brand blue falls to 2.55:1, which is unreadable.
+     This is the same hue lightened until it passes, for dark surfaces only. */
+  --color-brand-on-dark: #7fa5ff;
+  --color-ink: #191612;
+  --color-ink-soft: #4a443c;
+
+  /* The neutral scale is redefined rather than replaced class by class.
+     Every page already uses slate-*, so warming the ramp here recolours the
+     whole portal at once and cannot miss one of four hundred usages - and it
+     makes the portal share an identity with the marketing site, which had
+     drifted into looking like a different product.
+
+     The 400-600 steps are darker than a stock grey ramp on purpose. They are
+     used for muted body text, and the stock #94A3B8 sits at 2.8:1 on white -
+     a contrast failure this tool would report on somebody else's site. Every
+     step from 400 down now clears 4.5:1 on the light surfaces it appears on. */
+  --color-slate-50:  #faf8f5;
+  --color-slate-100: #f3efe9;
+  --color-slate-200: #e7e1d8;
+  --color-slate-300: #d6cdc1;
+  --color-slate-400: #6f675d;
+  --color-slate-500: #5c554c;
+  --color-slate-600: #4a443c;
+  --color-slate-700: #3a342e;
+  --color-slate-800: #2a2621;
+  --color-slate-900: #191612;
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   /* Headlines only. Archivo is sturdy and slightly narrow, which suits a
      diagnostic instrument better than the geometric grotesques every other
@@ -18,7 +42,9 @@
 html { scroll-behavior: smooth; }
 
 body {
-  background: #f6f7fb;
+  /* Warm off-white, matching the marketing site's ground. A cool #F6F7FB
+     under warm cards reads as two designs stitched together. */
+  background: #f7f4ef;
   color: var(--color-ink);
   font-family: var(--font-sans);
 }
