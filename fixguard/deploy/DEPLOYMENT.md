@@ -106,6 +106,24 @@ This is the only variant that binds 80 and 443 itself, via `nginx/`.
 
 ---
 
+## Two health endpoints, on purpose
+
+`/api/v1/health` is liveness: it answers as long as the process is running.
+That is what the container healthcheck uses, and it is the only one anything
+with a restart policy should watch.
+
+`/api/v1/health/ready` is readiness, and it does real work - writes a row to
+prove the disk is not full (SQLite serves reads from a full disk, so a read
+proves very little), checks disk headroom, and checks that `/dev/shm` has room
+for Chromium's renderer surfaces. It answers 503 when a check fails, so
+nothing watching it has to parse the body.
+
+They are separate deliberately. Wiring a restart policy to readiness means one
+full disk becomes a restart loop, which takes the service down instead of
+leaving it up and complaining.
+
+---
+
 ## Verifying a deploy
 
     curl -s https://<domain>/api/v1/health
