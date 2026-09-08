@@ -1,13 +1,16 @@
 """FixGuard AI API gateway."""
 from __future__ import annotations
 
+import asyncio
+import datetime as dt
+import os
 import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import adminstats, config, db, errors
+from . import adminstats, config, db, errors, metrics
 from . import accounts
 from .routers import admin, audits, auth, prompts, reports
 
@@ -41,7 +44,20 @@ async def lifespan(app: FastAPI):
         flush=True,
     )
 
-    yield
+    # Metrics are batched to disk rather than written per request, so the
+    # loop that does the batching has to outlive each one.
+    flusher = asyncio.create_task(metrics.flusher())
+    try:
+        yield
+    finally:
+        flusher.cancel()
+        # The task flushes what it is holding when cancelled. Waiting for it
+        # is the difference between losing the last thirty seconds of every
+        # deploy and not.
+        try:
+            await flusher
+        except asyncio.CancelledError:
+            pass
 
 
 app = FastAPI(
@@ -94,9 +110,19 @@ async def public_routes_are_public(request, call_next):
 async def count_requests(request, call_next):
     started = time.perf_counter()
     response = await call_next(request)
-    adminstats.requests.record(
-        request.url.path, response.status_code,
-        (time.perf_counter() - started) * 1000,
+    elapsed = (time.perf_counter() - started) * 1000
+
+    adminstats.requests.record(request.url.path, response.status_code, elapsed)
+
+    # Recorded against the route template rather than the URL. Routing has
+    # already happened by the time call_next returns, so the matched route is
+    # on the scope; a request that matched nothing is bucketed as "unmatched"
+    # so a scanner walking random paths cannot grow this table a row at a time.
+    route = request.scope.get("route")
+    metrics.record(
+        getattr(route, "path", None) or "unmatched",
+        response.status_code,
+        elapsed,
     )
     return response
 
@@ -113,3 +139,57 @@ app.include_router(reports.router)
 @app.get("/api/v1/health", tags=["meta"])
 async def health() -> dict:
     return {"status": "ok", "service": "fixguard-api", "version": "0.1.0"}
+
+
+@app.get("/api/v1/health/ready", tags=["meta"])
+async def ready(response: Response) -> dict:
+    """Whether this instance can actually do its job, not merely reply.
+
+    /health stays a liveness check: it answers as long as the process is
+    running, which is what a container restart policy should key off. This is
+    the readiness question, and it is deliberately a different endpoint,
+    because wiring the two together means one full disk takes the container
+    down in a restart loop instead of leaving it up and complaining.
+
+    Answers 503 when a check fails so anything watching it does not have to
+    parse the body to find out.
+    """
+    checks: dict[str, dict] = {}
+
+    # A read proves very little - SQLite serves reads from a full disk. The
+    # thing that breaks first is the write.
+    try:
+        with db.get_conn() as conn:
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS _readiness (id INTEGER PRIMARY KEY, at TEXT)"
+            )
+            conn.execute(
+                "INSERT OR REPLACE INTO _readiness (id, at) VALUES (1, ?)",
+                (dt.datetime.now(dt.timezone.utc).isoformat(),),
+            )
+        checks["database_writable"] = {"ok": True}
+    except Exception as exc:  # noqa: BLE001
+        checks["database_writable"] = {"ok": False, "detail": str(exc)[:200]}
+
+    # Chromium needs somewhere to put renderer surfaces, and a browser that
+    # cannot start reports as the audited site being broken - a failure that
+    # blames the customer for our own disk.
+    stats = adminstats.process_stats()
+    disk = stats.get("disk")
+    checks["disk_headroom"] = (
+        {"ok": disk["used_percent"] < 95, "used_percent": disk["used_percent"]}
+        if disk
+        else {"ok": True, "detail": "not measurable here"}
+    )
+
+    shm = os.statvfs("/dev/shm") if hasattr(os, "statvfs") else None
+    if shm:
+        free_mb = shm.f_bavail * shm.f_frsize / (1024 * 1024)
+        # Docker's 64 MB default is what makes Chromium die partway through a
+        # page load, so this is checked rather than assumed.
+        checks["shared_memory"] = {"ok": free_mb >= 128, "free_mb": round(free_mb)}
+
+    ok = all(c["ok"] for c in checks.values())
+    if not ok:
+        response.status_code = 503
+    return {"ready": ok, "checks": checks, "uptime_seconds": stats["uptime_seconds"]}

@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query, Request
 
-from .. import adminstats, config
+from .. import adminstats, config, metrics
 from ..audit import runner
 from ..errors import FixGuardError
 from . import auth
@@ -38,6 +38,20 @@ def require_admin(request: Request) -> dict:
     user = auth.current_user(request)
     if not user or not user.get("is_admin"):
         raise FixGuardError("NOT_FOUND", "Not found.")
+    # Recorded before the handler runs, and deduplicated inside, so a console
+    # left open all afternoon leaves one row rather than a thousand. A read-
+    # only console still shows real customers' addresses; who looked at that
+    # should not rest on everyone remembering that they did.
+    try:
+        adminstats.log_admin_access(
+            user,
+            request.url.path,
+            (request.headers.get("x-real-ip") or "").strip() or None,
+        )
+    except Exception:  # noqa: BLE001
+        # Never let the audit trail's own failure lock an operator out of the
+        # console during the incident they opened it for.
+        pass
     return user
 
 
@@ -59,6 +73,10 @@ async def overview(
         "process": adminstats.process_stats(),
         "database": adminstats.database_stats(),
         "requests": adminstats.requests.snapshot(),
+        # Latency and availability from the persisted rollups, which unlike
+        # the in-memory counters above survive a deploy.
+        "traffic": metrics.summary(24),
+        "admin_access": adminstats.recent_admin_access(10),
         "quota_pressure": adminstats.quota_pressure(),
         "admin_emails_configured": len(config.ADMIN_EMAILS),
     }

@@ -230,6 +230,57 @@ def account_tests() -> None:
     )
 
 
+# ------------------------------------------------------------------ metrics
+def metrics_tests() -> None:
+    """The bucketing, which is where a latency number could quietly lie.
+
+    Percentiles here are the upper bound of the bucket a value falls in, not
+    an interpolation inside it. That is a real loss of precision, and these
+    pin down that it is the honest direction: never reported as faster than
+    the data can support.
+    """
+    from app import metrics
+
+    bounds = metrics.BUCKETS_MS
+    check(
+        "U-32  A duration lands in the first bucket it fits",
+        metrics.bucket_index(0) == 0
+        and metrics.bucket_index(bounds[0]) == 0
+        and metrics.bucket_index(bounds[0] + 0.001) == 1,
+        f"boundary at {bounds[0]}ms",
+    )
+    check(
+        "U-33  Anything past the last bound is the overflow bucket",
+        metrics.bucket_index(bounds[-1] + 1) == len(bounds),
+    )
+
+    # 100 requests, all in the 5-10ms bucket. p95 must not claim 5ms.
+    fast = [0, 100] + [0] * (len(bounds) - 1)
+    p95 = metrics.percentile_bound(fast, 95)
+    check(
+        "U-34  A percentile is the bucket's upper bound, never below it",
+        p95["bound_ms"] == bounds[1] and p95["over"] is False,
+        f"p95 reported {p95}",
+    )
+
+    # Two slow requests in a hundred reach p99; one does not, and should not.
+    # A single outlier in a hundred is the hundredth value, so a p99 that
+    # surfaced it would be reporting something worse than the data says. The
+    # honest home for that one request is max_ms, which the console shows.
+    two_slow = [98] + [0] * (len(bounds) - 1) + [2]
+    one_slow = [99] + [0] * (len(bounds) - 1) + [1]
+    check(
+        "U-35  p99 reflects the sample, not the single worst request",
+        metrics.percentile_bound(two_slow, 99)["over"] is True
+        and metrics.percentile_bound(one_slow, 99)["over"] is False
+        and metrics.percentile_bound(two_slow, 50)["bound_ms"] == bounds[0],
+        f"two_slow p99={metrics.percentile_bound(two_slow, 99)}",
+    )
+    check(
+        "U-36  No samples means no percentile, not a zero",
+        metrics.percentile_bound([0] * (len(bounds) + 1), 50)["bound_ms"] is None,
+    )
+
 # -------------------------------------------------------------------- admin
 class FakeRequest:
     """Enough of a Request for the gate: cookies and headers."""
@@ -374,6 +425,8 @@ def main() -> int:
     scoring_tests()
     print("\nadmin")
     admin_tests()
+    print("\nmetrics")
+    metrics_tests()
 
     passed = [n for n, ok, _ in results if ok]
     failed = [n for n, ok, _ in results if not ok]

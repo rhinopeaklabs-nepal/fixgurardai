@@ -108,6 +108,41 @@ CREATE TABLE IF NOT EXISTS sessions (
     expires_at TEXT NOT NULL
 );
 
+-- Per-minute request rollups. Written in batches by a background flush, not
+-- once per request: this database is on the same disk Chromium is using, and
+-- a write per request would contend with the audit that matters.
+--
+-- The latency columns are a fixed-bucket histogram rather than raw timings,
+-- because percentiles from separate minutes cannot be averaged back together
+-- and storing every duration to compute them exactly would cost more than
+-- the answer is worth. What that trades away is stated where it is read.
+CREATE TABLE IF NOT EXISTS request_metrics (
+    minute       TEXT NOT NULL,          -- UTC, to the minute
+    route        TEXT NOT NULL,          -- the templated path, never the raw URL
+    status_class TEXT NOT NULL,          -- 2xx | 4xx | 5xx
+    count        INTEGER NOT NULL,
+    sum_ms       REAL NOT NULL,
+    max_ms       REAL NOT NULL,
+    buckets      TEXT NOT NULL,          -- json: counts per latency bucket
+    PRIMARY KEY (minute, route, status_class)
+);
+
+CREATE INDEX IF NOT EXISTS idx_metrics_minute ON request_metrics(minute);
+
+-- Who opened the admin console, and when. The console is read-only, so this
+-- is not an undo log; it is the record that answers "was anyone looking at
+-- this data" without having to trust that nobody was.
+CREATE TABLE IF NOT EXISTS admin_access (
+    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT NOT NULL,
+    email   TEXT NOT NULL,
+    path    TEXT NOT NULL,
+    ip      TEXT,
+    at      TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_admin_access_at ON admin_access(at DESC);
+
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_expiry ON sessions(expires_at);
 CREATE INDEX IF NOT EXISTS idx_share_audit ON share_links(audit_id);

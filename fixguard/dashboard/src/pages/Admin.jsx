@@ -250,6 +250,87 @@ export default function Admin() {
         </Panel>
       </section>
 
+      {/* ---------------------------------------------------------- traffic */}
+      <section className="mb-8">
+        <Panel title={`Traffic · last ${data.traffic.window_hours} hours`}>
+          {data.traffic.requests === 0 ? (
+            <Quiet>Nothing recorded in this window yet.</Quiet>
+          ) : (
+            <>
+              <div className="grid gap-px bg-slate-100 sm:grid-cols-3">
+                <Figure
+                  label="Availability"
+                  value={
+                    data.traffic.availability_percent === null
+                      ? "–"
+                      : `${data.traffic.availability_percent}%`
+                  }
+                  note="served without a server error"
+                />
+                <Figure
+                  label="Median response"
+                  value={latency(data.traffic.p50)}
+                  note={`${data.traffic.requests.toLocaleString()} requests`}
+                />
+                <Figure
+                  label="95th percentile"
+                  value={latency(data.traffic.p95)}
+                  note={`slowest single call ${data.traffic.max_ms}ms`}
+                />
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-y border-slate-100 text-left text-xs uppercase tracking-wide text-slate-500">
+                      <th className="px-4 py-2 font-bold">Route</th>
+                      <th className="px-4 py-2 text-right font-bold">Calls</th>
+                      <th className="px-4 py-2 text-right font-bold">Median</th>
+                      <th className="px-4 py-2 text-right font-bold">p95</th>
+                      <th className="px-4 py-2 text-right font-bold">5xx</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {data.traffic.routes.map((r) => (
+                      <tr key={r.route}>
+                        <td className="max-w-0 px-4 py-2">
+                          <code className="block truncate font-mono text-xs text-slate-700">
+                            {r.route}
+                          </code>
+                        </td>
+                        <td className="px-4 py-2 text-right tabular-nums text-slate-700">
+                          {r.count.toLocaleString()}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-2 text-right tabular-nums text-slate-600">
+                          {latency(r.p50)}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-2 text-right tabular-nums text-slate-600">
+                          {latency(r.p95)}
+                        </td>
+                        <td
+                          className={`px-4 py-2 text-right tabular-nums ${
+                            r.errors ? "font-semibold text-red-600" : "text-slate-400"
+                          }`}
+                        >
+                          {r.errors}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <p className="border-t border-slate-100 px-4 py-2.5 text-xs leading-relaxed text-slate-500">
+                Timings are kept as buckets, so a percentile is reported as the
+                upper bound of the bucket it falls in rather than an exact
+                figure the stored data cannot support. Bounds:{" "}
+                {data.traffic.bucket_bounds_ms.join(", ")}ms, then over.
+              </p>
+            </>
+          )}
+        </Panel>
+      </section>
+
       {/* ------------------------------------------------------------ quota */}
       {data.quota_pressure.length > 0 && (
         <section className="mb-8">
@@ -417,6 +498,36 @@ export default function Admin() {
         </Panel>
       </section>
 
+      {/* ------------------------------------------------------- who looked */}
+      {data.admin_access.length > 0 && (
+        <section className="mb-8">
+          <Panel title="Console opened by">
+            <ul className="divide-y divide-slate-100">
+              {data.admin_access.map((row) => (
+                <li
+                  key={`${row.email}-${row.at}`}
+                  className="flex flex-wrap items-baseline gap-x-3 px-4 py-2 text-sm"
+                >
+                  <span className="font-medium text-slate-800">{row.email}</span>
+                  <code className="font-mono text-xs text-slate-500">{row.path}</code>
+                  {row.ip && (
+                    <code className="font-mono text-xs text-slate-400">{row.ip}</code>
+                  )}
+                  <span className="ml-auto text-xs text-slate-500">
+                    {new Date(row.at).toLocaleString()}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="border-t border-slate-100 px-4 py-2.5 text-xs leading-relaxed text-slate-500">
+              One entry per administrator per five minutes, not per request.
+              This console refreshes itself, and a row per poll would bury the
+              one that matters.
+            </p>
+          </Panel>
+        </section>
+      )}
+
       {/* --------------------------------------------------- what is absent */}
       <section className="rounded-2xl border border-dashed border-slate-300 bg-white px-5 py-4">
         <h2 className="text-xs font-bold uppercase tracking-wide text-slate-500">
@@ -429,15 +540,19 @@ export default function Admin() {
             four other applications as well as this one.
           </li>
           <li>
-            <strong className="font-semibold">Request latency percentiles.</strong>{" "}
-            Nothing records per-request timings, so there is no honest number to
-            put here. The slowest single call since boot was {requests.slowest_ms}
-            ms{requests.slowest_path ? ` on ${requests.slowest_path}` : ""}.
+            <strong className="font-semibold">Exact latency percentiles.</strong>{" "}
+            Timings are kept as histogram buckets, so the traffic panel reports
+            the bound of the bucket a percentile falls in. Percentiles cannot be
+            merged across minutes after the fact, and keeping every duration to
+            compute them exactly would cost more than the answer is worth on one
+            core.
           </li>
           <li>
-            <strong className="font-semibold">Anything before this deploy.</strong>{" "}
-            Request counters live in memory and reset when the process restarts.
-            The audit figures come from the database and do not.
+            <strong className="font-semibold">Traffic older than 30 days.</strong>{" "}
+            Rollups are trimmed at that age. The tiles at the top count only what
+            this process has served since{" "}
+            {new Date(requests.counting_since).toLocaleString()}; the traffic
+            panel reads the persisted rollups and survives a deploy.
           </li>
         </ul>
       </section>
@@ -649,6 +764,34 @@ function Page({ children }) {
 }
 
 /* -------------------------------------------------------------- formatting */
+
+/**
+ * A bucketed percentile, written so it cannot be mistaken for an exact one.
+ * "under 250ms" and "over 5s" are both true statements about what was stored;
+ * "237ms" would not be.
+ */
+function latency(p) {
+  if (!p || p.bound_ms === null) return "–";
+  return p.over ? `over ${fmtMs(p.bound_ms)}` : `under ${fmtMs(p.bound_ms)}`;
+}
+
+function fmtMs(ms) {
+  return ms >= 1000 ? `${ms / 1000}s` : `${ms}ms`;
+}
+
+function Figure({ label, value, note }) {
+  return (
+    <div className="bg-white px-4 py-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+        {label}
+      </p>
+      <p className="mt-1 font-display text-xl font-extrabold tabular-nums text-slate-900">
+        {value}
+      </p>
+      <p className="mt-0.5 text-xs text-slate-500">{note}</p>
+    </div>
+  );
+}
 
 function bytes(n) {
   if (n === null || n === undefined) return "unavailable";

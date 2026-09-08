@@ -1,15 +1,25 @@
+import { Suspense, lazy } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import Nav from "./components/Nav";
 import Home from "./pages/Home";
-import AuditDetail from "./pages/AuditDetail";
-import PromptStudio from "./pages/PromptStudio";
-import History from "./pages/History";
-import Compare from "./pages/Compare";
-import Architecture from "./pages/Architecture";
-import Admin from "./pages/Admin";
 import SharedReport from "./pages/SharedReport";
 import SignIn from "./pages/SignIn";
 import { AuthProvider, useAuth } from "./lib/auth";
+
+// Only three things are in the first download: the audit console somebody
+// signs in to use, the sign-in page, and the public report a client opens
+// from a link. Everything else is fetched when it is first opened.
+//
+// This is not only about weight. The admin console described the shape of
+// the operations data - route names, table names, thresholds - to every
+// visitor who ever loaded the dashboard, including the ones who could never
+// open it. Splitting it out means it is downloaded by people who use it.
+const AuditDetail = lazy(() => import("./pages/AuditDetail"));
+const PromptStudio = lazy(() => import("./pages/PromptStudio"));
+const History = lazy(() => import("./pages/History"));
+const Compare = lazy(() => import("./pages/Compare"));
+const Architecture = lazy(() => import("./pages/Architecture"));
+const Admin = lazy(() => import("./pages/Admin"));
 
 export default function App() {
   return (
@@ -41,6 +51,10 @@ function Shell() {
       </a>
       {!isPublic && !isSignIn && <Nav />}
       <main id="main">
+      {/* The same placeholder the session check uses. A lazy chunk arriving
+          looks to the reader exactly like a page deciding whether they are
+          signed in, and it should: both are the app not knowing yet. */}
+      <Suspense fallback={<Waiting />}>
       <Routes>
         <Route path="/r/:token" element={<SharedReport />} />
         <Route path="/signin" element={<SignedOutOnly><SignIn /></SignedOutOnly>} />
@@ -59,6 +73,7 @@ function Shell() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Suspense>
       </main>
     </>
   );

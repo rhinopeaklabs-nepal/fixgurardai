@@ -365,3 +365,44 @@ def recent_audits(limit: int = 50, status: str | None = None) -> list[dict[str, 
                 params,
             )
         ]
+
+
+# ------------------------------------------------------------- access record
+ACCESS_DEDUPE_MINUTES = 5
+
+
+def log_admin_access(user: dict, path: str, ip: str | None) -> None:
+    """Record that an administrator looked, without recording every poll.
+
+    The console refreshes itself every fifteen seconds, so writing a row per
+    request would produce thousands of entries a day that all say the same
+    thing and bury the one that matters. A session already seen within the
+    last few minutes is not written again, which keeps the table an answer to
+    "who opened this, and when" rather than a request log.
+    """
+    now = _now()
+    cutoff = _iso(now - dt.timedelta(minutes=ACCESS_DEDUPE_MINUTES))
+    with get_conn() as conn:
+        recent = conn.execute(
+            "SELECT 1 FROM admin_access WHERE user_id = ? AND at >= ? LIMIT 1",
+            (user["id"], cutoff),
+        ).fetchone()
+        if recent:
+            return
+        conn.execute(
+            "INSERT INTO admin_access (user_id, email, path, ip, at) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (user["id"], user["email"], path, ip, _iso(now)),
+        )
+
+
+def recent_admin_access(limit: int = 25) -> list[dict[str, Any]]:
+    with get_conn() as conn:
+        return [
+            dict(r)
+            for r in conn.execute(
+                "SELECT email, path, ip, at FROM admin_access "
+                "ORDER BY at DESC LIMIT ?",
+                (limit,),
+            )
+        ]
