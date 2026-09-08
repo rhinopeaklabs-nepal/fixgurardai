@@ -504,7 +504,11 @@ function Freshness({ at, live, onToggle, stale }) {
         }`}
         aria-hidden
       />
-      <span className="text-sm text-slate-600" aria-live="polite">
+      {/* No aria-live on the counter itself. It changes every second, and a
+          live region would have a screen reader reciting "updated 4s ago,
+          updated 5s ago" over whatever the operator is actually reading.
+          Only the state worth interrupting for is announced. */}
+      <span className="text-sm text-slate-600">
         {stale
           ? "Last refresh failed"
           : ago === null
@@ -512,6 +516,9 @@ function Freshness({ at, live, onToggle, stale }) {
             : ago < 2
               ? "Updated just now"
               : `Updated ${ago}s ago`}
+      </span>
+      <span role="status" className="sr-only">
+        {stale ? "The last refresh failed. Figures below may be out of date." : ""}
       </span>
       <button
         onClick={onToggle}
