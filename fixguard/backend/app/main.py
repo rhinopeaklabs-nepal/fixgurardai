@@ -1,14 +1,15 @@
 """FixGuard AI API gateway."""
 from __future__ import annotations
 
+import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import config, db, errors
+from . import adminstats, config, db, errors
 from . import accounts
-from .routers import audits, auth, prompts, reports
+from .routers import admin, audits, auth, prompts, reports
 
 
 @asynccontextmanager
@@ -18,6 +19,28 @@ async def lifespan(app: FastAPI):
     # enough for a service that restarts on every deploy, and avoids running a
     # scheduler on a box that has one core to spare for Chromium.
     accounts.purge_expired_sessions()
+
+    # An audit's task dies with the process that owns it, so every deploy
+    # leaves rows that still say running and never will again. Closing them
+    # here, before anything can be served, is the difference between a report
+    # page that explains what happened and one that spins forever.
+    orphans = adminstats.reconcile_orphans()
+    if orphans:
+        print(f"[boot] closed {orphans} audit(s) interrupted by a restart", flush=True)
+
+    # Who may open the admin console is read from the environment on every
+    # request, so there is nothing to synchronise here - only something worth
+    # saying out loud, because an empty list means the console is off.
+    # flush because a boot line nobody can find in the logs is not a boot
+    # line; stdout here is block-buffered when it is a pipe, which is what it
+    # always is under a process manager.
+    print(
+        f"[boot] admin console: {len(config.ADMIN_EMAILS)} address(es) configured"
+        if config.ADMIN_EMAILS
+        else "[boot] admin console: disabled (ADMIN_EMAILS is empty)",
+        flush=True,
+    )
+
     yield
 
 
@@ -63,9 +86,25 @@ async def public_routes_are_public(request, call_next):
     return response
 
 
+# Counts what this process serves, so the admin console can report load
+# without a metrics daemon. The numbers reset on deploy and are labelled with
+# the moment they started, because a counter that looks cumulative but is not
+# is worse than one that says so.
+@app.middleware("http")
+async def count_requests(request, call_next):
+    started = time.perf_counter()
+    response = await call_next(request)
+    adminstats.requests.record(
+        request.url.path, response.status_code,
+        (time.perf_counter() - started) * 1000,
+    )
+    return response
+
+
 errors.register(app)
 
 app.include_router(auth.router)
+app.include_router(admin.router)
 app.include_router(audits.router)
 app.include_router(prompts.router)
 app.include_router(reports.router)

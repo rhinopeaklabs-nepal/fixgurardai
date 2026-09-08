@@ -34,6 +34,9 @@ ERROR_CODES: dict[str, tuple[int, bool]] = {
     "REPORT_NOT_FOUND": (404, False),
     "REPORT_EXPIRED": (410, False),
     "INTERNAL_ERROR": (500, True),
+    # Used where saying "you may not" would itself be information - the admin
+    # console answers a non-admin exactly as it answers a stranger.
+    "NOT_FOUND": (404, False),
 }
 
 
@@ -68,11 +71,33 @@ def envelope(
     }
 
 
+def _count_error(code: str) -> None:
+    """Tell the admin counters, without making errors depend on them.
+
+    Imported inside the function because adminstats imports the database and
+    this module is imported by nearly everything; a module-level import here
+    would make the error envelope part of that cycle. A monitoring counter
+    must never be able to turn an error into a different error, so a failure
+    to count is swallowed.
+    """
+    try:
+        from . import adminstats
+
+        adminstats.requests.record_error(code)
+    except Exception:
+        pass
+
+
 def register(app) -> None:
     """Attach handlers so even framework errors use the SRS envelope."""
 
     @app.exception_handler(FixGuardError)
     async def _fixguard(_: Request, exc: FixGuardError):
+        # Counted here rather than in the request middleware, which sees only
+        # a status code. Which code fired is the part an operator can act on:
+        # a hundred UNREACHABLE_TARGETs is somebody typing addresses wrong, a
+        # hundred WORKER_CRASHes is the browser falling over.
+        _count_error(exc.code)
         return JSONResponse(
             status_code=exc.status,
             content=envelope(exc.code, exc.message, exc.audit_id),

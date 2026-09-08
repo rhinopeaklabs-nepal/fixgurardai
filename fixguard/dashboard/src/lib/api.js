@@ -118,6 +118,16 @@ export const api = {
 
   // SRS 10.2 and 10.4. Deleting an audit takes its share link with it, so a
   // link already handed to a client stops resolving - which is the point.
+  // Administration. These answer 404 to anyone who is not a listed admin,
+  // so a non-admin dashboard that called them by mistake would see the same
+  // thing as a typo rather than a locked door worth rattling.
+  adminOverview: (days = 30) => request(`/api/v1/admin/overview?days=${days}`),
+  adminUsers: () => request("/api/v1/admin/users"),
+  adminAudits: (limit = 50, status = null) =>
+    request(
+      `/api/v1/admin/audits?limit=${limit}` + (status ? `&status=${status}` : ""),
+    ),
+
   deleteAudit: (id) => request(`/api/v1/audits/${id}`, { method: "DELETE" }),
   deleteMyData: () => request("/api/v1/account/data", { method: "DELETE" }),
 };

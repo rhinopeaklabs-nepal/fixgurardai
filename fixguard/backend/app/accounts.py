@@ -29,6 +29,7 @@ import secrets
 import sqlite3
 import uuid
 
+from . import config
 from .db import get_conn
 
 # scrypt parameters. n=2**14 keeps a single hash near 60-100ms on one vCPU:
@@ -183,6 +184,10 @@ def start_session(user_id: str) -> tuple[str, dt.datetime]:
     return token, expires
 
 
+def is_admin(email: str | None) -> bool:
+    return bool(email) and email.strip().lower() in config.ADMIN_EMAILS
+
+
 def resolve_session(token: str | None) -> dict | None:
     """The user this token belongs to, or None. Expired rows are cleaned up."""
     if not token:
@@ -202,7 +207,18 @@ def resolve_session(token: str | None) -> dict | None:
                 "DELETE FROM sessions WHERE token_hash = ?", (_token_hash(token),)
             )
             return None
-    return {"id": row["user_id"], "email": row["email"], "name": row["name"]}
+    return {
+        "id": row["user_id"],
+        "email": row["email"],
+        "name": row["name"],
+        # Answered from the deployment's environment, not from a column.
+        # A stored flag needs granting, revoking and a boot-time sync to keep
+        # the two in step, and drifts the moment one of those is missed;
+        # deriving it means removing an address from ADMIN_EMAILS takes hold
+        # on the very next request, and an admin who signs up after a deploy
+        # does not have to wait for a restart to be one.
+        "is_admin": is_admin(row["email"]),
+    }
 
 
 def end_session(token: str | None) -> None:

@@ -78,6 +78,21 @@ SHARE_LINK_TTL_DAYS = int(os.getenv("SHARE_LINK_TTL_DAYS", "30"))
 # Dev-only escape hatch so the local testbed can be audited. Never enable in prod.
 ALLOW_PRIVATE_TARGETS = os.getenv("ALLOW_PRIVATE_TARGETS", "0") == "1"
 
+# --- Administration -------------------------------------------------------
+# Who may open the admin console, as a comma-separated list of emails.
+#
+# Deliberately not a flag anyone can set through the API. There is no "make
+# this user an admin" endpoint, because an account-management endpoint is the
+# thing an attacker with one stolen session would reach for first. The list
+# lives in the deployment's environment, is applied on every boot, and is
+# authoritative in both directions: an email removed here loses admin at the
+# next restart rather than lingering as a row nobody remembers granting.
+ADMIN_EMAILS = [
+    e.strip().lower()
+    for e in os.getenv("ADMIN_EMAILS", "").split(",")
+    if e.strip()
+]
+
 # --- FR-3.1 route crawl / FR-3.2 re-render detection ---------------------
 MAX_ROUTES_CRAWL = int(os.getenv("MAX_ROUTES_CRAWL", "5"))
 ROUTE_TIMEOUT_MS = int(os.getenv("ROUTE_TIMEOUT_MS", "12000"))

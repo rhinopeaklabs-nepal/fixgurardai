@@ -6,6 +6,7 @@ import PromptStudio from "./pages/PromptStudio";
 import History from "./pages/History";
 import Compare from "./pages/Compare";
 import Architecture from "./pages/Architecture";
+import Admin from "./pages/Admin";
 import SharedReport from "./pages/SharedReport";
 import SignIn from "./pages/SignIn";
 import { AuthProvider, useAuth } from "./lib/auth";
@@ -51,6 +52,11 @@ function Shell() {
         <Route path="/history" element={<RequireAuth><History /></RequireAuth>} />
         <Route path="/architecture" element={<RequireAuth><Architecture /></RequireAuth>} />
 
+        {/* The server answers 404 to a non-admin, so this route being
+            reachable gives nothing away. Gating it here as well keeps a
+            mistyped URL from showing a signed-in user a broken page. */}
+        <Route path="/admin" element={<RequireAdmin><Admin /></RequireAdmin>} />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </main>
@@ -85,6 +91,30 @@ function RequireAuth({ children }) {
   }
   return children;
 }
+
+/**
+ * Admin is decided by the server on every /me, not by anything this bundle
+ * can set. Redirecting rather than rendering an error keeps the console
+ * invisible to an account that has no business knowing it is there.
+ */
+function RequireAdmin({ children }) {
+  const { status, user } = useAuth();
+  const location = useLocation();
+
+  if (status === "checking") return <Waiting />;
+  if (status === "signed-out") {
+    return (
+      <Navigate
+        to="/signin"
+        replace
+        state={{ from: location.pathname + location.search }}
+      />
+    );
+  }
+  if (!user?.is_admin) return <Navigate to="/" replace />;
+  return children;
+}
+
 
 function SignedOutOnly({ children }) {
   const { status } = useAuth();

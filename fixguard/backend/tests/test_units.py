@@ -230,6 +230,115 @@ def account_tests() -> None:
     )
 
 
+# -------------------------------------------------------------------- admin
+class FakeRequest:
+    """Enough of a Request for the gate: cookies and headers."""
+
+    def __init__(self, cookies=None, headers=None):
+        self.cookies = cookies or {}
+        self.headers = headers or {}
+
+
+def admin_tests() -> None:
+    """The admin gate, which is the only new privilege in the system.
+
+    Worth unit-testing rather than trusting to a live call, because the two
+    interesting cases - a signed-in non-admin, and a caller holding the
+    service API key - both succeed against every other route in the app.
+    """
+    from app.routers import admin as admin_router
+    from app.routers import auth as auth_router
+    from app.errors import FixGuardError
+
+    original = auth_router.current_user
+    try:
+        def refuse(who):
+            auth_router.current_user = lambda request: who
+            try:
+                admin_router.require_admin(FakeRequest())
+                return None
+            except FixGuardError as exc:
+                return exc
+
+        signed_out = refuse(None)
+        plain_user = refuse({"id": "u1", "email": "a@b.com", "is_admin": False})
+        check(
+            "U-23  A signed-in non-admin is refused",
+            plain_user is not None,
+        )
+        # Same code and same message both ways. A distinct "forbidden" tells a
+        # curious account that the console exists and is worth attacking.
+        check(
+            "U-24  Non-admin and signed-out are indistinguishable",
+            signed_out is not None
+            and signed_out.code == plain_user.code
+            and signed_out.message == plain_user.message,
+            f"{getattr(signed_out, 'code', None)} vs {getattr(plain_user, 'code', None)}",
+        )
+        check(
+            "U-25  The refusal does not admit the route exists",
+            plain_user.status == 404,
+            f"status {plain_user.status}",
+        )
+
+        auth_router.current_user = lambda request: {
+            "id": "u2", "email": "boss@b.com", "is_admin": True,
+        }
+        allowed = admin_router.require_admin(FakeRequest())
+        check("U-26  A listed admin is allowed", allowed["email"] == "boss@b.com")
+    finally:
+        auth_router.current_user = original
+
+    # The service key opens audits; it must not open administration. Asserted
+    # against the source because the gate calling anything else is the bug.
+    import inspect
+
+    source = inspect.getsource(admin_router.require_admin)
+    check(
+        "U-27  The admin gate reads a session and nothing else",
+        "x-api-key" not in source.lower() and "identity" not in source,
+        source.strip().splitlines()[-3:],
+    )
+
+    # Secrets are safest in a query that never selects them.
+    import app.adminstats as adminstats
+
+    reporting = inspect.getsource(adminstats)
+    check(
+        "U-28  No admin query selects a password hash or a session token",
+        "password_hash" not in reporting
+        and "token_hash" not in reporting.replace("key_hash", ""),
+    )
+
+    from app import config
+
+    original_list = config.ADMIN_EMAILS
+    try:
+        config.ADMIN_EMAILS = ["boss@example.com"]
+        check(
+            "U-29  Admin is decided by the environment, case and space aside",
+            accounts.is_admin("  BOSS@Example.com ")
+            and not accounts.is_admin("someone@example.com")
+            and not accounts.is_admin(None),
+        )
+        # The failure this shape prevents: an empty list is the off switch,
+        # and must not mean "everyone" the way a permissive default would.
+        config.ADMIN_EMAILS = []
+        check(
+            "U-30  An empty list admits nobody",
+            not accounts.is_admin("boss@example.com"),
+        )
+    finally:
+        config.ADMIN_EMAILS = original_list
+
+    check(
+        "U-31  Percentiles are exact on the sample, not interpolated",
+        adminstats._pct([10, 20, 30, 40], 50) == 20
+        and adminstats._pct([10, 20, 30, 40], 100) == 40
+        and adminstats._pct([], 50) is None,
+        f"p50={adminstats._pct([10, 20, 30, 40], 50)}",
+    )
+
 # ------------------------------------------------------------------ scoring
 def scoring_tests() -> None:
     # The failure this guards against shipped once: a run that measured only
@@ -263,6 +372,8 @@ def main() -> int:
     account_tests()
     print("\nscoring")
     scoring_tests()
+    print("\nadmin")
+    admin_tests()
 
     passed = [n for n, ok, _ in results if ok]
     failed = [n for n, ok, _ in results if not ok]

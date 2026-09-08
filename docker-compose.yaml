@@ -24,6 +24,10 @@ services:
       # back to localhost, and every badge on a customer's site then calls
       # the visitor's own machine.
       API_PUBLIC_URL: ${PUBLIC_BASE_URL}
+      # Comma-separated emails allowed to open the admin console. Applied on
+      # every boot and authoritative both ways: removing an address here
+      # revokes it at the next restart. There is no API that grants this.
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
       MAX_CONCURRENT_AUDITS: "1"
       AUDIT_HARD_TIMEOUT_S: "90"
       FIXGUARD_DATA_DIR: /data

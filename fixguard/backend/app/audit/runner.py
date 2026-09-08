@@ -49,6 +49,28 @@ async def _broadcast(run_id: str, event: str, data: dict[str, Any]) -> None:
             pass
 
 
+def snapshot() -> dict:
+    """What this process is doing right now.
+
+    Read from the live objects rather than the database, because the point of
+    the admin console's live panel is to answer the question the database
+    cannot: whether a run that says "running" still has a task behind it.
+    """
+    in_flight = [rid for rid, t in _tasks.items() if not t.done()]
+    return {
+        "concurrency_limit": config.MAX_CONCURRENT_AUDITS,
+        # A semaphore with no permits left means the next audit waits, which
+        # is the single number that explains a queue on a 1 vCPU box. asyncio
+        # exposes no public reader for it, and the alternative - counting
+        # tasks and hoping the two agree - would be a second source of truth
+        # that can disagree with the thing actually gating the work.
+        "slots_free": getattr(_sem, "_value", None),
+        "in_flight": in_flight,
+        "tasks_tracked": len(_tasks),
+        "sse_subscribers": {rid: len(qs) for rid, qs in _subscribers.items()},
+    }
+
+
 def start(
     target_url: str,
     test_email: str,

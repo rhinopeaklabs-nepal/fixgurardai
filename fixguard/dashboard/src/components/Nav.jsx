@@ -102,6 +102,16 @@ export default function Nav() {
                     )}
                     <p className="truncate text-sm text-slate-500">{user.email}</p>
                   </div>
+                  {user.is_admin && (
+                    <NavLink
+                      role="menuitem"
+                      to="/admin"
+                      onClick={() => setOpen(false)}
+                      className="block px-4 py-2.5 text-sm font-medium text-brand hover:bg-slate-50"
+                    >
+                      System
+                    </NavLink>
+                  )}
                   <NavLink
                     role="menuitem"
                     to="/architecture"

@@ -30,10 +30,12 @@ used on a box that has Coolify.
 | Base Directory | `/` |
 | Docker Compose Location | `/docker-compose.yaml` |
 
-Two environment variables. Everything else is already in the compose file:
+Two environment variables are required; a third turns on the admin console.
+Everything else is already in the compose file:
 
     FIXGUARD_API_KEY=<generate: openssl rand -hex 32>
     PUBLIC_BASE_URL=https://<your domain>
+    ADMIN_EMAILS=you@example.com          # optional, comma-separated
 
 Then set the domain on the **web** service. Leave the **api** service's domain
 empty - `web` already proxies `/api` to it from the same origin, and giving
@@ -43,6 +45,28 @@ DNS must already point at the VPS *before* the first deploy. Let's Encrypt
 validates over HTTP against whatever the name currently resolves to, so
 deploying first and pointing DNS afterwards produces a self-signed
 certificate and a browser warning until the next retry.
+
+### The admin console
+
+`ADMIN_EMAILS` is the only way in. Any signed-in account whose email is on
+that list sees **System** in its account menu at `/admin`; everyone else gets
+a 404 from the API, identical to the answer a stranger gets, so the console
+does not advertise itself to accounts that cannot use it.
+
+There is no endpoint that grants admin, and no column storing it. Membership
+is read from this variable on every request, which means two things worth
+knowing:
+
+* Adding an address takes effect on that account's next request - no restart,
+  and it works for somebody who signs up after the deploy.
+* Removing one revokes access immediately, including for a session that is
+  already open.
+
+Leaving the variable empty disables the console entirely. The boot log says
+which of the two it did:
+
+    [boot] admin console: 1 address(es) configured
+    [boot] admin console: disabled (ADMIN_EMAILS is empty)
 
 ### Settings that live in the compose file, not the UI
 
