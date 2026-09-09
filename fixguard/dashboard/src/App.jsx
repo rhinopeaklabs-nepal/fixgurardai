@@ -20,6 +20,8 @@ const History = lazy(() => import("./pages/History"));
 const Compare = lazy(() => import("./pages/Compare"));
 const Architecture = lazy(() => import("./pages/Architecture"));
 const Admin = lazy(() => import("./pages/Admin"));
+const Privacy = lazy(() => import("./pages/Legal").then((m) => ({ default: m.Privacy })));
+const Terms = lazy(() => import("./pages/Legal").then((m) => ({ default: m.Terms })));
 
 export default function App() {
   return (
@@ -35,7 +37,14 @@ function Shell() {
   // The public report is standalone: a client following a shared link has no
   // account here and should not see the owner's navigation, or be asked to
   // sign in to read a report that was deliberately shared with them.
-  const isPublic = location.pathname.startsWith("/r/");
+  // Pages that carry their own header and belong to somebody who may have no
+  // account here at all: a shared report, the sign-in screen, and the two
+  // legal documents. Showing the signed-in navigation above those offers
+  // links that would only bounce the reader to a login.
+  const isPublic =
+    location.pathname.startsWith("/r/") ||
+    location.pathname === "/privacy" ||
+    location.pathname === "/terms";
   const isSignIn = location.pathname === "/signin";
 
   return (
@@ -58,6 +67,12 @@ function Shell() {
       <Routes>
         <Route path="/r/:token" element={<SharedReport />} />
         <Route path="/signin" element={<SignedOutOnly><SignIn /></SignedOutOnly>} />
+
+        {/* Public, and outside SignedOutOnly. Somebody already signed in has
+            at least as much reason to read these as somebody who is not, and
+            a policy you have to sign out to read is not published. */}
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
 
         <Route path="/" element={<RequireAuth><Home /></RequireAuth>} />
         <Route path="/a/:id" element={<RequireAuth><AuditDetail /></RequireAuth>} />

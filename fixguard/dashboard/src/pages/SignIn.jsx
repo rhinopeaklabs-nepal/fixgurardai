@@ -165,6 +165,21 @@ export default function SignIn({ mode: initial }) {
             password to any site it audits &mdash; to check a page behind a
             login, you sign in yourself and hand it the resulting session.
           </p>
+
+          {/* Shown when creating an account, because that is the moment the
+              agreement is actually being made. Present but quiet the rest of
+              the time, so somebody signing in can still find them. */}
+          <p className="mt-3 text-xs leading-relaxed text-slate-500">
+            {isSignUp ? "Creating an account means you agree to the " : "See the "}
+            <Link to="/terms" className="font-medium text-brand hover:underline">
+              terms
+            </Link>{" "}
+            and the{" "}
+            <Link to="/privacy" className="font-medium text-brand hover:underline">
+              privacy policy
+            </Link>
+            . FixGuard only audits sites you own or have permission to test.
+          </p>
         </div>
       </div>
 

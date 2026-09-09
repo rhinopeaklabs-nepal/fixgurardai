@@ -279,6 +279,18 @@ export default function SharedReport() {
         <p className="mt-1.5">
           Reachability is measured from one region, not from everywhere.
         </p>
+        {/* Somebody reading a shared report has had no other contact with
+            this service and did not agree to anything. Naming what it does
+            with data is more warranted here, not less. */}
+        <p className="mt-3">
+          <a href="/privacy" className="font-medium text-brand hover:underline">
+            Privacy
+          </a>{" "}
+          &middot;{" "}
+          <a href="/terms" className="font-medium text-brand hover:underline">
+            Terms
+          </a>
+        </p>
       </footer>
     </Shell>
   );
