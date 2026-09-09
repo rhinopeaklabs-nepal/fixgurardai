@@ -405,3 +405,52 @@ Measured on the live site, 6 September:
 > **Fix the contrast failure.** On the dark `#0F1729` band, the accent blue is
 > unreadable at 2.55:1. Use `#7FA5FF` for accent text on dark backgrounds.
 > Keep `#0055FF` on light backgrounds, where it is fine.
+
+---
+
+## Step 9 — make the claims true
+
+Not a design pass. The site currently promises something the product does not
+do, and a judge falsifies it with one click: **every "no account needed" claim
+is false.** The dashboard is behind sign-in, deliberately — an audit submits
+forms on a real site, and that is not a power to hand to an anonymous caller.
+
+The pricing table also sells features that are not built. Free with an account
+and an honest roadmap reads far better than a table a reviewer disproves.
+
+> **Correct four claims that are not true, and add the legal links.**
+>
+> **1. Remove every "no account needed" claim.** It appears on the home page
+> hero, in the "How it works" step 1, in the closing call to action, on the
+> pricing page in the Free plan card, in the feature list, and in the final
+> banner. Running an audit requires a free account.
+>
+> Replace them with the truth, which is still a good offer:
+> - Home hero and closing CTA: "Free to start. One URL and a free account —
+>   no snippet, no card."
+> - How it works, step 1: "Paste your address. No snippet, nothing to install
+>   on your site."
+> - Pricing, Free plan: "One audit. Full score, full evidence. A free account,
+>   no card."
+> - Feature comparison row "No login required": delete the row.
+>
+> **2. Say which paid features exist today.** In the comparison table, add the
+> word "Planned" in grey next to these four rows, and keep the ticks: scheduled
+> re-checks, team seats, white-label PDF, priority queue. Under the table add
+> one line: "Rows marked planned are on the roadmap and not yet available.
+> Everything else is live today."
+>
+> **3. Add a link to a real report.** In the hero, next to the "Open the
+> dashboard" button, add a secondary text link: "See a real report" pointing at
+> https://app.fixguardai.online/r/IHKZMhbyD8dFIZvk4ZIOT7JTAUWZ7z0R — it opens
+> without an account, and it is the only way somebody evaluating the product
+> sees real output before signing up.
+>
+> **4. Add legal links to the footer.** In the footer "Pages" column, below
+> Limits, add two links opening in the same tab:
+> - Privacy → https://app.fixguardai.online/privacy
+> - Terms → https://app.fixguardai.online/terms
+>
+> Keep the existing design system exactly: same type scale, same `#0055FF`
+> accent on light and `#7FA5FF` on dark, same spacing. Change wording and the
+> two footer links only — no layout changes, no new sections.
