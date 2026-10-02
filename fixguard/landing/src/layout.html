@@ -15,108 +15,118 @@
     <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/assets/site.css?v={{css}}" />
     <script src="/assets/site.js?v={{js}}" defer></script>
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
 
-    <header class="nav" data-nav-root>
-      <div class="nav-inner">
-        <a class="brand" href="/" aria-label="FixGuard AI home">
-          <span class="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
-          </span>
-          <span>FixGuard <b>AI</b></span>
-        </a>
+    <header class="island" data-nav-root>
+      <a class="brand" href="/" aria-label="FixGuard AI home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+        </span>
+        <span>FixGuard<b>AI</b></span>
+      </a>
 
-        <nav class="nav-links" aria-label="Primary">
-          <a href="/" data-nav="/">Home</a>
-          <a href="/how-it-works" data-nav="/how-it-works">How it works</a>
-          <a href="/pricing" data-nav="/pricing">Pricing</a>
-          <a href="/faq" data-nav="/faq">FAQ</a>
-          <a href="/limits" data-nav="/limits">Limits</a>
-        </nav>
-
-        <div class="nav-end">
-          <a class="link-quiet" href="https://app.fixguardai.online/signin">Sign in</a>
-          <a class="btn btn-primary btn-sm" href="https://app.fixguardai.online/">
-            Open the dashboard
-            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-          </a>
-          <button class="burger" type="button" aria-expanded="false" aria-controls="sheet" aria-label="Open menu" data-burger>
-            <span></span><span></span>
-          </button>
-        </div>
-      </div>
-
-      <div class="sheet" id="sheet" data-sheet hidden>
+      <nav class="island-links" aria-label="Primary">
         <a href="/" data-nav="/">Home</a>
         <a href="/how-it-works" data-nav="/how-it-works">How it works</a>
         <a href="/pricing" data-nav="/pricing">Pricing</a>
         <a href="/faq" data-nav="/faq">FAQ</a>
         <a href="/limits" data-nav="/limits">Limits</a>
-        <a href="https://app.fixguardai.online/signin">Sign in</a>
-        <a class="btn btn-primary" href="https://app.fixguardai.online/">Open the dashboard</a>
+      </nav>
+
+      <div class="island-end">
+        <a class="island-signin" href="https://app.fixguardai.online/signin">Sign in</a>
+        <a class="btn btn-primary btn-sm" href="https://app.fixguardai.online/">
+          <span>Open dashboard</span>
+          <span class="btn-icon" aria-hidden="true"><svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12 12 4M6 4h6v6"/></svg></span>
+        </a>
+        <button class="burger" type="button" aria-expanded="false" aria-controls="sheet" aria-label="Open menu" data-burger>
+          <span></span><span></span>
+        </button>
       </div>
     </header>
+
+    <div class="sheet" id="sheet" data-sheet hidden>
+      <nav aria-label="Menu">
+        <a href="/" data-nav="/" style="--i:0">Home</a>
+        <a href="/how-it-works" data-nav="/how-it-works" style="--i:1">How it works</a>
+        <a href="/pricing" data-nav="/pricing" style="--i:2">Pricing</a>
+        <a href="/faq" data-nav="/faq" style="--i:3">FAQ</a>
+        <a href="/limits" data-nav="/limits" style="--i:4">Limits</a>
+      </nav>
+      <div class="sheet-end">
+        <a class="btn btn-primary" href="https://app.fixguardai.online/">
+          <span>Open the dashboard</span>
+          <span class="btn-icon" aria-hidden="true"><svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12 12 4M6 4h6v6"/></svg></span>
+        </a>
+        <a class="btn btn-ghost" href="https://app.fixguardai.online/signin">Sign in</a>
+      </div>
+    </div>
 
     <main id="main">
 {{content}}
     </main>
 
     <footer class="footer">
-      <div class="wrap footer-grid">
+      <div class="wrap footer-top">
         <div class="footer-brand">
           <a class="brand" href="/" aria-label="FixGuard AI home">
             <span class="brand-mark" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
             </span>
-            <span>FixGuard <b>AI</b></span>
+            <span>FixGuard<b>AI</b></span>
           </a>
           <p>Pre-flight QA for websites built with AI. Find what is broken before your customers do.</p>
-          <p class="award">
-            <span class="award-dot" aria-hidden="true"></span>
-            2nd place, Hostinger 21-Day Startup Challenge 2026
+          <p class="award-chip">
+            <span class="award-logo" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M16.415 0v7.16l5.785 3.384V2.949L16.415 0ZM1.8 0v11.237h18.815L14.89 8.09l-7.457-.003V3.024L1.8 0Zm14.615 20.894v-7.033l-7.3-.003c.007.01-5.82-3.36-5.82-3.36l19.105.995V24l-5.985-3.106ZM1.8 13.36v8.04l5.635 2.6V16.39L1.8 13.36Z"/></svg>
+            </span>
+            <span><b>2nd place</b> · Hostinger 21-Day Startup Challenge 2026</span>
           </p>
         </div>
 
-        <div>
-          <h2 class="footer-head">What we check</h2>
-          <p class="footer-note">
-            Form checks confirm that a submission leaves the browser and is accepted by the
-            receiving server. Delivery to a specific mailbox is not verified. Reachability is
-            measured from one region, not from everywhere.
-          </p>
+        <div class="footer-cols">
+          <nav aria-label="Pages">
+            <h2 class="footer-head">Product</h2>
+            <ul class="footer-links">
+              <li><a href="/how-it-works" data-nav="/how-it-works">How it works</a></li>
+              <li><a href="/pricing" data-nav="/pricing">Pricing</a></li>
+              <li><a href="/faq" data-nav="/faq">FAQ</a></li>
+              <li><a href="/limits" data-nav="/limits">Limits</a></li>
+            </ul>
+          </nav>
+          <nav aria-label="Account">
+            <h2 class="footer-head">Account</h2>
+            <ul class="footer-links">
+              <li><a href="https://app.fixguardai.online/">Run an audit</a></li>
+              <li><a href="https://app.fixguardai.online/signin">Sign in</a></li>
+              <li><a href="https://app.fixguardai.online/r/IHKZMhbyD8dFIZvk4ZIOT7JTAUWZ7z0R">Sample report</a></li>
+            </ul>
+          </nav>
+          <nav aria-label="Legal">
+            <h2 class="footer-head">Legal</h2>
+            <ul class="footer-links">
+              <li><a href="https://app.fixguardai.online/privacy">Privacy</a></li>
+              <li><a href="https://app.fixguardai.online/terms">Terms</a></li>
+            </ul>
+          </nav>
         </div>
-
-        <nav aria-label="Pages">
-          <h2 class="footer-head">Pages</h2>
-          <ul class="footer-links">
-            <li><a href="/" data-nav="/">Home</a></li>
-            <li><a href="/how-it-works" data-nav="/how-it-works">How it works</a></li>
-            <li><a href="/pricing" data-nav="/pricing">Pricing</a></li>
-            <li><a href="/faq" data-nav="/faq">FAQ</a></li>
-            <li><a href="/limits" data-nav="/limits">Limits</a></li>
-            <li><a href="https://app.fixguardai.online/privacy">Privacy</a></li>
-            <li><a href="https://app.fixguardai.online/terms">Terms</a></li>
-          </ul>
-        </nav>
-
-        <nav aria-label="Account">
-          <h2 class="footer-head">Account</h2>
-          <ul class="footer-links">
-            <li><a href="https://app.fixguardai.online/signin">Sign in</a></li>
-            <li><a href="https://app.fixguardai.online/">Run an audit</a></li>
-            <li><a href="https://app.fixguardai.online/r/IHKZMhbyD8dFIZvk4ZIOT7JTAUWZ7z0R">Sample report</a></li>
-          </ul>
-        </nav>
       </div>
+
+      <div class="wrap footer-note">
+        <p><b>What we check.</b> Form checks confirm that a submission leaves the browser and is accepted by the receiving server. Delivery to a specific mailbox is not verified. Reachability is measured from one region, not from everywhere.</p>
+      </div>
+
       <div class="wrap footer-base">
         <span>© 2026 FixGuard AI</span>
         <span>Advisory only. FixGuard never edits your site.</span>
       </div>
+
+      <p class="footer-word" aria-hidden="true">FixGuard</p>
     </footer>
   </body>
 </html>
