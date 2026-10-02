@@ -78,5 +78,21 @@ services:
     expose:
       - "80"
 
+  # The marketing site at fixguardai.online, replacing the AI Builder page
+  # that used to live on the Web Hosting plan. Static HTML from nginx; it
+  # talks to nothing else in this stack, and every link into the product
+  # goes to the dashboard's own domain.
+  landing:
+    build:
+      context: ./fixguard/landing
+    restart: unless-stopped
+    environment:
+      # Coolify assigns the public domain to this service: set it to
+      # https://fixguardai.online,https://www.fixguardai.online in the UI.
+      - SERVICE_FQDN_LANDING_80=/
+    mem_limit: 64m
+    expose:
+      - "80"
+
 volumes:
   fixguard-data:

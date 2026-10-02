@@ -1,0 +1,54 @@
+<!--
+title: Limits · FixGuard AI
+description: What FixGuard will not do. A tool that reports what actually happened has to be equally plain about what it did not look at.
+path: /limits
+-->
+<section class="page-hero">
+  <div class="wrap">
+    <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>Limits</p>
+    <h1 class="display display-md">What FixGuard will not do.</h1>
+    <p class="lead">A tool that reports what actually happened has to be equally plain about what it did not look at. These are the limits, in the same words the reports use.</p>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <ul class="limits">
+      <li class="reveal">
+        <span class="limit-n">01</span>
+        <div>
+          <h2 class="h3">It never asks for a password to your site.</h2>
+          <p>To check pages behind a login, you sign in yourself and hand FixGuard the resulting session. A session is scoped, expiring and revocable. A password is none of those. Forms containing a password, card or ID field are never submitted.</p>
+        </div>
+      </li>
+      <li class="reveal">
+        <span class="limit-n">02</span>
+        <div>
+          <h2 class="h3">It cannot tell you the email arrived.</h2>
+          <p>FixGuard sees whether your form's request left the page and what came back. The mail your host then sends goes to you, not to FixGuard, so nothing here claims to have watched it land in an inbox.</p>
+        </div>
+      </li>
+      <li class="reveal">
+        <span class="limit-n">03</span>
+        <div>
+          <h2 class="h3">It checks reachability from one region.</h2>
+          <p>DNS, TLS and the response code are measured from where FixGuard runs. It does not claim a global view.</p>
+        </div>
+      </li>
+      <li class="reveal">
+        <span class="limit-n">04</span>
+        <div>
+          <h2 class="h3">It stores no cookie or token values.</h2>
+          <p>If you hand it a session, the names of the cookies are recorded and the values are not. Sign-out links and anything that looks like it deletes data are never followed.</p>
+        </div>
+      </li>
+      <li class="reveal">
+        <span class="limit-n">05</span>
+        <div>
+          <h2 class="h3">It never edits your site.</h2>
+          <p>FixGuard is advisory only. It writes the finding and the prompt; you, or your builder, make the change.</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>

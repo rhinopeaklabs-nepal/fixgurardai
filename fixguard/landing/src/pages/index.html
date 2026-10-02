@@ -1,0 +1,242 @@
+<!--
+title: FixGuard AI · Pre-flight QA for AI-built websites
+description: FixGuard opens your AI-built site in a real browser, submits your forms and follows your links, then turns every finding into a prompt scoped to one element, so your builder fixes one thing instead of rewriting the page.
+path: /
+-->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>Pre-flight QA for AI-built websites</p>
+      <h1 class="display">Stop wasting <span class="hl">AI builder credits.</span></h1>
+      <p class="lead">
+        FixGuard opens your site in a real browser, submits your forms and follows every link.
+        Then each finding becomes a prompt scoped to one element, so your builder fixes one
+        thing instead of regenerating the page.
+      </p>
+      <div class="actions">
+        <a class="btn btn-primary" href="https://app.fixguardai.online/">
+          Run a free audit
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </a>
+        <a class="btn btn-ghost" href="https://app.fixguardai.online/r/IHKZMhbyD8dFIZvk4ZIOT7JTAUWZ7z0R">See a sample report</a>
+      </div>
+      <ul class="assure">
+        <li>Free account</li>
+        <li>Nothing to install</li>
+        <li>Never asks for your site's password</li>
+      </ul>
+    </div>
+
+    <figure class="console" aria-label="Example audit: a contact form that shows success while the server returns 500">
+      <div class="console-bar">
+        <span></span><span></span><span></span>
+        <em>atelier-north.example · sample audit</em>
+      </div>
+      <ol class="console-log" data-typed>
+        <li style="--i:0"><span class="t-dim">open</span> https://atelier-north.example/</li>
+        <li style="--i:1"><span class="t-ok">GET</span> / <b>200</b> · 1.8s</li>
+        <li style="--i:2"><span class="t-dim">fill</span> form#contact with labelled test data</li>
+        <li style="--i:3"><span class="t-dim">submit</span> → page shows "Thanks, we'll be in touch!"</li>
+        <li style="--i:4" class="t-line-bad"><span class="t-bad">POST</span> /contact <b>500</b> Internal Server Error</li>
+        <li style="--i:5" class="t-line-bad"><span class="t-bad">GET</span> /pricing <b>404</b></li>
+        <li style="--i:6"><span class="t-warn">verdict</span> silent form failure · 2 broken routes</li>
+      </ol>
+      <div class="console-score">
+        <div class="ring" data-ring style="--score:49">
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="42" class="ring-track" />
+            <circle cx="50" cy="50" r="42" class="ring-fill" pathLength="100" />
+          </svg>
+          <span><b data-count="49">49</b><small>/100</small></span>
+        </div>
+        <div>
+          <p class="console-grade">Critical issues</p>
+          <p class="console-note">Each finding below comes with the request that proves it and a prompt that fixes only that.</p>
+        </div>
+      </div>
+    </figure>
+  </div>
+
+  <div class="wrap stats">
+    <div class="stat"><b>29s</b><span>average full audit, seven checks, one real browser</span></div>
+    <div class="stat stat-brand"><b>49 → 97</b><span>one test site, after four scoped prompts</span></div>
+    <div class="stat"><b>0</b><span>invented numbers in any report</span></div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <header class="sec-head">
+      <p class="eyebrow">The hidden failures</p>
+      <h2 class="h2">Three failures a success message hides.</h2>
+      <p class="sec-lead">The page told the visitor it worked. The network tells a different story.</p>
+    </header>
+
+    <div class="cards3">
+      <article class="card reveal">
+        <p class="tag tag-bad">Forms · 500 · silent success</p>
+        <h3>The success message that means nothing.</h3>
+        <p>A form can show a confirmation and send no request at all, or send one that comes back 500. FixGuard fills it in with clearly labelled test data, submits it, and reports which of those actually happened.</p>
+        <pre class="log"><span class="t-bad">POST</span> /contact  → <b>500</b>
+form#contact → success shown, <b>0</b> requests</pre>
+      </article>
+      <article class="card reveal">
+        <p class="tag tag-warn">Routes · 404 · redirect loop</p>
+        <h3>Links that lead nowhere.</h3>
+        <p>Every internal link is followed, not just listed. Redirect loops, pages that return 200 while rendering "not found", and routes that quietly 404 are named with the path a visitor would have clicked.</p>
+        <pre class="log"><span class="t-bad">GET</span> /pricing   → <b>404</b>
+<span class="t-warn">GET</span> /old-blog  → 301 → 301 → 301 <b>loop</b></pre>
+      </article>
+      <article class="card reveal">
+        <p class="tag">Third parties · every host</p>
+        <h3>Everyone your visitors reach.</h3>
+        <p>Every host that receives a request when someone opens your page, grouped by what it is for. Not just the scripts you added: the ones those scripts loaded too.</p>
+        <pre class="log">hosts contacted: <b>24</b>
+  analytics.example.com
+  ads.example.net · cdn.example.org</pre>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="prompt-sec">
+  <div class="wrap prompt-grid">
+    <div>
+      <p class="eyebrow">Why it saves credits</p>
+      <h2 class="h2">A finding your builder can act on in one pass.</h2>
+      <p class="sec-lead">
+        "Fix the contact form" makes an AI builder re-read the whole project and regenerate a
+        section. A finding that names one element, one property and the evidence lets it change
+        one rule and stop.
+      </p>
+      <ul class="ticks">
+        <li>Names the element by selector, not by description</li>
+        <li>Says what must not change, so the layout survives</li>
+        <li>Carries the request that proves the problem</li>
+      </ul>
+    </div>
+
+    <div class="compare-prompts">
+      <div class="prompt prompt-vague reveal">
+        <p class="prompt-label">What people usually paste</p>
+        <p class="prompt-text">The contact form is broken, please fix it.</p>
+        <p class="prompt-cost">Rewrites the section. Spends a credit. Often breaks something else.</p>
+      </div>
+      <div class="prompt prompt-scoped reveal">
+        <p class="prompt-label">A scoped finding, written up by FixGuard <span>illustrative</span></p>
+        <p class="prompt-text">
+          In <code>form#contact</code> only: the submit handler shows the success message
+          before the request finishes, and <code>POST /contact</code> returns 500. Show the
+          success message only after a 2xx response, and an error message otherwise. Do not
+          change the layout, styles or any other section.
+        </p>
+        <p class="prompt-cost">One element. One behaviour. Nothing else touched.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <header class="sec-head">
+      <p class="eyebrow">How it works</p>
+      <h2 class="h2">Four steps from address to fix.</h2>
+      <p class="sec-lead">No setup, no snippet. An address and a real browser doing what a visitor does.</p>
+    </header>
+    <ol class="steps">
+      <li class="reveal"><span class="step-n">1</span><h3>Paste your address</h3><p>No snippet, nothing to install on your site.</p></li>
+      <li class="reveal"><span class="step-n">2</span><h3>A real browser opens it</h3><p>FixGuard loads the page like a visitor, fills every form and presses submit.</p></li>
+      <li class="reveal"><span class="step-n">3</span><h3>A score, with evidence</h3><p>Out of 100, with the request or selector that cost each point.</p></li>
+      <li class="reveal"><span class="step-n">4</span><h3>A prompt per finding</h3><p>Paste it back into your builder, or hand it to whoever fixes it.</p></li>
+    </ol>
+    <p class="more"><a class="link-arrow" href="/how-it-works">See the full How it works →</a></p>
+  </div>
+</section>
+
+<section class="proof">
+  <div class="wrap">
+    <header class="sec-head sec-head-dark">
+      <p class="eyebrow">Proof</p>
+      <h2 class="h2">One test site, four scoped prompts.</h2>
+      <p class="sec-lead">The same AI-built site, audited before and after each finding was pasted back as a prompt. No rewrites, no redesigns: just the fixes FixGuard named.</p>
+    </header>
+    <div class="proof-grid">
+      <div class="proof-card reveal">
+        <p class="proof-label">Health score</p>
+        <p class="proof-num"><span>49</span><i aria-hidden="true">→</i><b data-count="97">97</b></p>
+        <div class="bar"><span style="--from:49%;--to:97%"></span></div>
+      </div>
+      <div class="proof-card reveal">
+        <p class="proof-label">Critical findings</p>
+        <p class="proof-num"><span>11</span><i aria-hidden="true">→</i><b>0</b></p>
+        <div class="bar bar-down"><span style="--from:100%;--to:0%"></span></div>
+      </div>
+      <div class="proof-card reveal">
+        <p class="proof-label">Silent form failures</p>
+        <p class="proof-num"><span>3</span><i aria-hidden="true">→</i><b>0</b></p>
+        <div class="bar bar-down"><span style="--from:100%;--to:0%"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap two-col">
+    <div>
+      <header class="sec-head">
+        <p class="eyebrow">Deliverables</p>
+        <h2 class="h2">What you walk away with.</h2>
+        <p class="sec-lead">Something you can hand to a developer, a client, or a future version of yourself.</p>
+      </header>
+      <ul class="deliver">
+        <li class="reveal"><h3>A score you can argue with</h3><p>Out of 100, every point traced to the request or selector that cost it.</p></li>
+        <li class="reveal"><h3>A PDF certificate</h3><p>For whoever fixes it, or whoever commissioned the build.</p></li>
+        <li class="reveal"><h3>A shareable client-safe link</h3><p>Expires on a schedule you set.</p></li>
+        <li class="reveal"><h3>A before-and-after comparison</h3><p>Two runs side by side, so the fix is visible.</p></li>
+      </ul>
+    </div>
+    <div>
+      <header class="sec-head">
+        <p class="eyebrow">Who it is for</p>
+        <h2 class="h2">If it looks done but has to work.</h2>
+      </header>
+      <ul class="who">
+        <li class="reveal"><p class="who-tag">AI builder users</p><h3>Pre-flight before you share the link.</h3><p>Catch the form that says Thanks! while sending nothing, before anyone else sees it.</p></li>
+        <li class="reveal"><p class="who-tag">Freelancers and agencies</p><h3>Hand over proof, not a thumbs-up.</h3><p>A certificate, a client-safe link and a before-and-after that lands with the invoice.</p></li>
+        <li class="reveal"><p class="who-tag">Clients reviewing a build</p><h3>An independent score before you accept.</h3><p>The report names the path and the selector, so the fix is not a matter of opinion.</p></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="band band-alt">
+  <div class="wrap faq-wrap">
+    <header class="sec-head">
+      <p class="eyebrow">FAQ</p>
+      <h2 class="h2">Questions you should ask.</h2>
+      <p class="sec-lead">Straight answers, in the same words the reports use.</p>
+      <p class="more"><a class="link-arrow" href="/faq">See every question →</a></p>
+    </header>
+    <div class="faq">
+      <details><summary>Does FixGuard install anything on my site?</summary><p>No. There is no snippet, tag or agent to add. FixGuard loads your site in its own browser the way a visitor would. Nothing changes on your end.</p></details>
+      <details><summary>Does it need my password?</summary><p>Never. To check pages behind a login you sign in yourself and hand FixGuard the resulting session, which is scoped, expiring and revocable. Forms containing a password, card or ID field are never submitted.</p></details>
+      <details><summary>How long does an audit take?</summary><p>Around 30 seconds for a single page with the seven default checks. Following your sitemap and internal links takes longer, in proportion to how many routes it finds.</p></details>
+      <details><summary>Can it verify the email actually arrived?</summary><p>No, and it will not claim to. FixGuard sees whether your form's request left the page and what came back. The mail your host then sends goes to you, not to FixGuard.</p></details>
+      <details><summary>Is my audit private?</summary><p>Yes. Audits stay private to your account. Shareable links expire on a schedule you set, and no cookie or token values are ever stored.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="wrap cta-inner">
+    <div>
+      <p class="eyebrow eyebrow-light">Ready when you are</p>
+      <h2 class="h2">Find out before your customers do.</h2>
+      <p>One URL and a free account. No snippet, no card.</p>
+    </div>
+    <a class="btn btn-light" href="https://app.fixguardai.online/">
+      Run a free audit
+      <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+    </a>
+  </div>
+</section>

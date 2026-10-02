@@ -1,0 +1,48 @@
+<!--
+title: FAQ · FixGuard AI
+description: Straight answers about what FixGuard checks, what it can and cannot see, and how your audits stay private.
+path: /faq
+-->
+<section class="page-hero">
+  <div class="wrap">
+    <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>FAQ</p>
+    <h1 class="display display-md">Questions you should ask.</h1>
+    <p class="lead">Straight answers, in the same words the reports use.</p>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap faq-page">
+    <h2 class="faq-group">How it runs</h2>
+    <div class="faq">
+      <details><summary>Does FixGuard install anything on my site?</summary><p>No. There is no snippet, tag or agent to add. FixGuard loads your site in its own browser the way a visitor would. Nothing changes on your end.</p></details>
+      <details><summary>How long does an audit take?</summary><p>Around 30 seconds for a single page with the seven default checks. Following your sitemap and internal links takes longer, in proportion to how many routes it finds.</p></details>
+      <details><summary>Does it need my password?</summary><p>Never. To check pages behind a login you sign in yourself and hand FixGuard the resulting session, which is scoped, expiring and revocable. Forms containing a password, card or ID field are never submitted.</p></details>
+      <details><summary>What does a finding look like?</summary><p>Each finding names the request or selector that produced it, the status it returned, and a tightly scoped prompt you can paste back into your AI builder to fix one thing instead of rewriting your layout.</p></details>
+    </div>
+
+    <h2 class="faq-group">What it can and cannot see</h2>
+    <div class="faq">
+      <details><summary>Can it verify the email actually arrived?</summary><p>No, and it will not claim to. FixGuard sees whether your form's request left the page and what came back. The mail your host then sends goes to you, not to FixGuard.</p></details>
+      <details><summary>Where does it check reachability from?</summary><p>DNS, TLS and the response code are measured from the single region where FixGuard runs. It does not claim a global view.</p></details>
+      <details><summary>Does it store my cookies or tokens?</summary><p>No values. If you hand it a session, the names of the cookies are recorded and the values are not. Sign-out links and anything that looks like it deletes data are never followed.</p></details>
+    </div>
+
+    <h2 class="faq-group">Accounts and privacy</h2>
+    <div class="faq">
+      <details><summary>Is my audit private?</summary><p>Yes. Audits stay private to your account. Shareable links expire on a schedule you set, and no cookie or token values are ever stored.</p></details>
+      <details><summary>Do I need an account?</summary><p>Yes, a free one. It is what keeps your audits private to you. No card, and nothing to install on your site.</p></details>
+      <details><summary>Can I buy Pro or Team?</summary><p>Not yet. Paid plans are not on sale. Ask from the pricing page and you will hear first when they open.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="wrap cta-inner">
+    <div>
+      <p class="eyebrow eyebrow-light">Still wondering?</p>
+      <h2 class="h2">Run an audit and see for yourself.</h2>
+    </div>
+    <a class="btn btn-light" href="https://app.fixguardai.online/">Open the dashboard</a>
+  </div>
+</section>
