@@ -1,34 +1,107 @@
 @import "tailwindcss";
 
+/*
+ * Night + lime, the same palette as the marketing site at fixguardai.online,
+ * so moving from the site into the product does not change worlds.
+ *
+ * The whole portal is recoloured here rather than class by class. Every
+ * page uses slate-*, white and brand, so:
+ *
+ *  - the slate ramp is inverted: 50 is the darkest ground, 900 the lightest
+ *    text. A class that meant "subtle fill" or "strong heading" still means
+ *    that; only the direction of light changed.
+ *  - white is the card surface. That also makes text-white dark, which is
+ *    exactly right on the lime buttons and the bright status fills it sits on.
+ *  - the status hues keep their meaning but swap ends: 50-300, used for tinted
+ *    backgrounds and borders, become dark tints; 600-900, used for text on
+ *    those tints, become light. 500 is the bright mid for dots and fills.
+ *
+ * Contrast on the #0b0d10 ground: slate-900 text 18.1:1, slate-500 muted
+ * 9.0:1, slate-400 7.9:1, lime 16.4:1; dark text on lime 15.1:1.
+ */
 @theme {
-  --color-brand: #0055ff;
-  --color-brand-dark: #0044cc;
-  /* On a dark ground the brand blue falls to 2.55:1, which is unreadable.
-     This is the same hue lightened until it passes, for dark surfaces only. */
-  --color-brand-on-dark: #7fa5ff;
-  --color-ink: #191612;
-  --color-ink-soft: #4a443c;
+  --color-brand: #c6ff36;
+  --color-brand-dark: #b4ef1f;
+  --color-brand-on-dark: #c6ff36;
+  --color-ink: #f3f5f7;
+  --color-ink-soft: #c4cbd2;
 
-  /* The neutral scale is redefined rather than replaced class by class.
-     Every page already uses slate-*, so warming the ramp here recolours the
-     whole portal at once and cannot miss one of four hundred usages - and it
-     makes the portal share an identity with the marketing site, which had
-     drifted into looking like a different product.
+  --color-white: #14181d;
+  /* Evidence blocks and the sign-in panel: a step darker than the ground,
+     with their own text shades, because the inverted slate ramp would
+     otherwise turn these panels light. */
+  --color-console: #07090b;
+  --color-console-ink: #e8ecef;
+  --color-console-muted: #9aa4ae;
+  --color-black: #000000;
 
-     The 400-600 steps are darker than a stock grey ramp on purpose. They are
-     used for muted body text, and the stock #94A3B8 sits at 2.8:1 on white -
-     a contrast failure this tool would report on somebody else's site. Every
-     step from 400 down now clears 4.5:1 on the light surfaces it appears on. */
-  --color-slate-50:  #faf8f5;
-  --color-slate-100: #f3efe9;
-  --color-slate-200: #e7e1d8;
-  --color-slate-300: #d6cdc1;
-  --color-slate-400: #6f675d;
-  --color-slate-500: #5c554c;
-  --color-slate-600: #4a443c;
-  --color-slate-700: #3a342e;
-  --color-slate-800: #2a2621;
-  --color-slate-900: #191612;
+  --color-slate-50:  #101317;
+  --color-slate-100: #1b2026;
+  --color-slate-200: #232a31;
+  --color-slate-300: #34404a;
+  --color-slate-400: #9aa4ae;
+  --color-slate-500: #a9b2bb;
+  --color-slate-600: #c4cbd2;
+  --color-slate-700: #d6dce1;
+  --color-slate-800: #e8ecef;
+  --color-slate-900: #f3f5f7;
+
+  --color-red-50:  #22110f;
+  --color-red-100: #34171a;
+  --color-red-200: #5a2427;
+  --color-red-300: #7a2f33;
+  --color-red-500: #ff5d5d;
+  --color-red-600: #ff7676;
+  --color-red-700: #ff9393;
+  --color-red-800: #ffb0b0;
+  --color-red-900: #ffcaca;
+
+  --color-amber-50:  #221b0d;
+  --color-amber-100: #33280f;
+  --color-amber-200: #5a4417;
+  --color-amber-300: #7a5c1f;
+  --color-amber-500: #ffc24b;
+  --color-amber-600: #ffcc66;
+  --color-amber-700: #ffd680;
+  --color-amber-800: #ffe09c;
+  --color-amber-900: #ffeab8;
+
+  --color-emerald-50:  #0e2219;
+  --color-emerald-100: #133022;
+  --color-emerald-200: #1c4a33;
+  --color-emerald-500: #3ddc84;
+  --color-emerald-600: #5ee39a;
+  --color-emerald-700: #7fe9af;
+  --color-emerald-800: #a0efc4;
+  --color-emerald-900: #c0f5d8;
+
+  --color-orange-100: #33200f;
+  --color-orange-800: #ffc79c;
+  --color-blue-50:  #101a2c;
+  --color-blue-100: #16233b;
+  --color-violet-100: #241a3d;
+  --color-violet-500: #a78bfa;
+  --color-violet-700: #c4b5fd;
+  --color-violet-800: #ddd6fe;
+  --color-indigo-100: #1c1d3d;
+  --color-indigo-500: #818cf8;
+  --color-indigo-800: #c7d2fe;
+  --color-rose-100: #33141d;
+  --color-rose-500: #fb7185;
+  --color-rose-800: #fecdd3;
+  --color-teal-100: #0f2a28;
+  --color-teal-500: #2dd4bf;
+  --color-teal-800: #99f6e4;
+  --color-sky-100: #0f2333;
+  --color-sky-500: #38bdf8;
+  --color-sky-800: #bae6fd;
+  --color-fuchsia-100: #2e1433;
+  --color-fuchsia-500: #e879f9;
+  --color-fuchsia-800: #f5d0fe;
+  --color-lime-100: #1c260c;
+  --color-lime-600: #c6ff36;
+  --color-lime-800: #e3ff9c;
+
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   /* Headlines only. Archivo is sturdy and slightly narrow, which suits a
      diagnostic instrument better than the geometric grotesques every other
@@ -39,15 +112,18 @@
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
+:root { color-scheme: dark; }
+
 html { scroll-behavior: smooth; }
 
 body {
-  /* Warm off-white, matching the marketing site's ground. A cool #F6F7FB
-     under warm cards reads as two designs stitched together. */
-  background: #f7f4ef;
+  /* Same ground as the marketing site. */
+  background: #0b0d10;
   color: var(--color-ink);
   font-family: var(--font-sans);
 }
+
+::selection { background: rgba(198, 255, 54, 0.3); color: #f3f5f7; }
 
 @keyframes pulse-ring {
   0%   { opacity: .55; transform: scale(.97); }

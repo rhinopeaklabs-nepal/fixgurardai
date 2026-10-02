@@ -413,7 +413,7 @@ export default function AuditDetail() {
             Paste this into your site footer. It fetches the latest score on load,
             so re-running an audit updates it everywhere.
           </p>
-          <pre className="overflow-x-auto rounded-lg bg-slate-900 p-3 font-mono text-[11px] text-slate-100">
+          <pre className="overflow-x-auto rounded-lg bg-console p-3 font-mono text-[11px] text-console-ink">
 {badge.embed_script}
           </pre>
         </div>

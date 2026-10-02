@@ -245,7 +245,7 @@ function Prompts({ data, agents }) {
                   </span>
                 </span>
               </summary>
-              <pre className="overflow-x-auto whitespace-pre-wrap border-t border-slate-100 bg-slate-900 p-4 font-mono text-[11px] leading-relaxed text-slate-100">
+              <pre className="overflow-x-auto whitespace-pre-wrap border-t border-slate-100 bg-console p-4 font-mono text-[11px] leading-relaxed text-console-ink">
 {p.guarded_prompt}
               </pre>
             </details>

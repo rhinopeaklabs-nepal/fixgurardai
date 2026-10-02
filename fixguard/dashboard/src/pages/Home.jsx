@@ -272,7 +272,7 @@ export default function Home() {
                     type="checkbox"
                     checked={needsAuth}
                     onChange={(e) => setNeedsAuth(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 accent-[#0055ff]"
+                    className="mt-0.5 h-4 w-4 accent-brand"
                   />
                   <span>
                     <span className="font-semibold">
@@ -316,7 +316,7 @@ export default function Home() {
                   setError(null);
                 }
               }}
-              className="mt-0.5 h-4 w-4 accent-[#0055ff]"
+              className="mt-0.5 h-4 w-4 accent-brand"
             />
             <span className="leading-relaxed">
               I own this site or have permission to test it. FixGuard will fill
@@ -568,7 +568,7 @@ function AuthBlock({
               type="checkbox"
               checked={authForms}
               onChange={(e) => setAuthForms(e.target.checked)}
-              className="mt-0.5 h-3.5 w-3.5 accent-[#0055ff]"
+              className="mt-0.5 h-3.5 w-3.5 accent-brand"
             />
             <span>
               Also submit forms behind the login. Off by default, because a

@@ -55,17 +55,17 @@ export function ScoreDial({ score, grade, label, letter }) {
   const unscored = score == null;
   const pct = unscored ? 0 : Math.max(0, Math.min(100, score));
   const hue = unscored
-    ? "#cbd5e1"
+    ? "var(--color-slate-300)"
     : pct >= 80
-      ? "#059669"
+      ? "var(--color-emerald-500)"
       : pct >= 55
-        ? "#d97706"
-        : "#dc2626";
+        ? "var(--color-amber-500)"
+        : "var(--color-red-500)";
   return (
     <div className="flex items-center gap-5">
       <div
         className="relative grid h-28 w-28 shrink-0 place-items-center rounded-full"
-        style={{ background: `conic-gradient(${hue} ${pct * 3.6}deg, #e5e7eb 0deg)` }}
+        style={{ background: `conic-gradient(${hue} ${pct * 3.6}deg, var(--color-slate-200) 0deg)` }}
       >
         <div className="grid h-[86px] w-[86px] place-items-center rounded-full bg-white">
           <span
@@ -206,7 +206,7 @@ export function PassedStrip({ items }) {
 export function Evidence({ lines }) {
   if (!lines?.length) return null;
   return (
-    <div className="mt-2.5 overflow-x-auto rounded-lg bg-slate-900 px-3 py-2.5 font-mono text-[11px] leading-relaxed text-slate-300">
+    <div className="mt-2.5 overflow-x-auto rounded-lg bg-console px-3 py-2.5 font-mono text-[11px] leading-relaxed text-console-muted">
       {lines.map((line, i) => (
         <div key={i} className="whitespace-pre">
           {line}

@@ -23,7 +23,7 @@ const PRODUCTS = [
     detail:
       "FastAPI gateway, Playwright Chromium, SQLite, PDF rendering, and the reverse proxy that terminates TLS.",
     removal: "No browser automation, no database, no audits. The product does nothing.",
-    accent: "#0055FF",
+    accent: "#c6ff36",
   },
   {
     key: "hosting",
@@ -32,7 +32,7 @@ const PRODUCTS = [
     detail:
       "The marketing page and the intake form a visitor meets first. Static, so it stays up even while the engine is being redeployed; the form hands the address it collects to the dashboard.",
     removal: "No public page and no intake. Nobody reaches the dashboard without already knowing its URL.",
-    accent: "#7c3aed",
+    accent: "#a78bfa",
   },
   {
     key: "builder",
@@ -41,7 +41,7 @@ const PRODUCTS = [
     detail:
       "Landing page, lead capture and the quick-audit intake form that hands a URL to the dashboard.",
     removal: "No funnel and no intake. The product is undiscoverable.",
-    accent: "#059669",
+    accent: "#3ddc84",
   },
   {
     key: "agents",
@@ -50,7 +50,7 @@ const PRODUCTS = [
     detail:
       "Log parser, prompt generator and summary agent. Each runs a deterministic engine first; a model refines the output when one is configured.",
     removal: "Raw console output and no prompts. The findings stop being actionable.",
-    accent: "#d97706",
+    accent: "#ffc24b",
   },
 ];
 
@@ -146,11 +146,11 @@ function Pipeline() {
   // because that is the only place it sits: the landing page collects the
   // address and hands it over. Everything after that is the VPS.
   const steps = [
-    ["Web Hosting", "Visitor gives a URL on the landing page", "#7c3aed"],
-    ["VPS", "Dashboard receives it and starts the audit", "#0055FF"],
-    ["VPS", "Chromium opens the site and submits its forms", "#0055FF"],
-    ["AI Agents", "Findings become plain English", "#d97706"],
-    ["VPS", "Report, PDF, shareable link", "#0055FF"],
+    ["Web Hosting", "Visitor gives a URL on the landing page", "#a78bfa"],
+    ["VPS", "Dashboard receives it and starts the audit", "#c6ff36"],
+    ["VPS", "Chromium opens the site and submits its forms", "#c6ff36"],
+    ["AI Agents", "Findings become plain English", "#ffc24b"],
+    ["VPS", "Report, PDF, shareable link", "#c6ff36"],
   ];
   return (
     <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-5">

@@ -17,16 +17,16 @@ import FourProducts from "../components/FourProducts";
 
 // Semantic, and ordered by how much a site owner should care.
 const KINDS = {
-  "first party": { label: "Your own domain", bar: "#334155", dot: "bg-slate-700", chip: "bg-slate-200 text-slate-800", watching: false },
-  advertising: { label: "Advertising", bar: "#e11d48", dot: "bg-rose-500", chip: "bg-rose-100 text-rose-800", watching: true },
-  analytics: { label: "Analytics", bar: "#7c3aed", dot: "bg-violet-500", chip: "bg-violet-100 text-violet-800", watching: true },
-  "support chat": { label: "Support chat", bar: "#4f46e5", dot: "bg-indigo-500", chip: "bg-indigo-100 text-indigo-800", watching: true },
-  "form handling": { label: "Form handling", bar: "#65a30d", dot: "bg-lime-600", chip: "bg-lime-100 text-lime-800", watching: true },
-  payments: { label: "Payments", bar: "#059669", dot: "bg-emerald-500", chip: "bg-emerald-100 text-emerald-800", watching: false },
-  "bot protection": { label: "Bot protection", bar: "#0d9488", dot: "bg-teal-500", chip: "bg-teal-100 text-teal-800", watching: false },
-  media: { label: "Media", bar: "#c026d3", dot: "bg-fuchsia-500", chip: "bg-fuchsia-100 text-fuchsia-800", watching: false },
-  cdn: { label: "CDN", bar: "#0284c7", dot: "bg-sky-500", chip: "bg-sky-100 text-sky-800", watching: false },
-  fonts: { label: "Fonts", bar: "#d97706", dot: "bg-amber-500", chip: "bg-amber-100 text-amber-800", watching: false },
+  "first party": { label: "Your own domain", bar: "#9aa4ae", dot: "bg-slate-700", chip: "bg-slate-200 text-slate-800", watching: false },
+  advertising: { label: "Advertising", bar: "#fb7185", dot: "bg-rose-500", chip: "bg-rose-100 text-rose-800", watching: true },
+  analytics: { label: "Analytics", bar: "#a78bfa", dot: "bg-violet-500", chip: "bg-violet-100 text-violet-800", watching: true },
+  "support chat": { label: "Support chat", bar: "#818cf8", dot: "bg-indigo-500", chip: "bg-indigo-100 text-indigo-800", watching: true },
+  "form handling": { label: "Form handling", bar: "#c6ff36", dot: "bg-lime-600", chip: "bg-lime-100 text-lime-800", watching: true },
+  payments: { label: "Payments", bar: "#3ddc84", dot: "bg-emerald-500", chip: "bg-emerald-100 text-emerald-800", watching: false },
+  "bot protection": { label: "Bot protection", bar: "#2dd4bf", dot: "bg-teal-500", chip: "bg-teal-100 text-teal-800", watching: false },
+  media: { label: "Media", bar: "#e879f9", dot: "bg-fuchsia-500", chip: "bg-fuchsia-100 text-fuchsia-800", watching: false },
+  cdn: { label: "CDN", bar: "#38bdf8", dot: "bg-sky-500", chip: "bg-sky-100 text-sky-800", watching: false },
+  fonts: { label: "Fonts", bar: "#ffc24b", dot: "bg-amber-500", chip: "bg-amber-100 text-amber-800", watching: false },
   other: { label: "Uncategorised", bar: "#94a3b8", dot: "bg-slate-400", chip: "bg-slate-100 text-slate-600", watching: true },
 };
 

@@ -184,16 +184,15 @@ export default function SignIn({ mode: initial }) {
       </div>
 
       {/* ---------------- what it does ---------------- */}
-      <aside className="hidden flex-col justify-center bg-slate-900 px-12 py-14 lg:flex">
-        {/* On the dark panel the brand blue falls to 3.21:1. Same hue,
-            lightened until it reads, and only here. */}
+      <aside className="hidden flex-col justify-center bg-console border-l border-slate-200 px-12 py-14 lg:flex">
+        {/* On the console-black panel the lime reads at 16:1. */}
         <p className="text-xs font-semibold uppercase tracking-wider text-brand-on-dark">
-          Pre-flight QA for AI Builder sites
+          Pre-flight QA for AI-built websites
         </p>
-        <h2 className="mt-4 max-w-md font-display text-3xl font-extrabold leading-tight tracking-tight text-white">
+        <h2 className="mt-4 max-w-md font-display text-3xl font-extrabold leading-tight tracking-tight text-slate-900">
           Find what is broken before your customers do
         </h2>
-        <p className="mt-4 max-w-md leading-relaxed text-slate-300">
+        <p className="mt-4 max-w-md leading-relaxed text-slate-500">
           FixGuard opens your site in a real browser, submits your forms,
           follows your routes, and reports what actually happens rather than
           what the page claims.
@@ -217,10 +216,10 @@ export default function SignIn({ mode: initial }) {
             <li key={title} className="flex gap-3">
               <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
               <div>
-                <p className="font-semibold text-white">{title}</p>
+                <p className="font-semibold text-slate-900">{title}</p>
                 {/* On the dark panel the ramp inverts: 400 is 3.24:1 here,
                     300 is 11.47:1. */}
-                <p className="mt-0.5 text-sm leading-relaxed text-slate-300">
+                <p className="mt-0.5 text-sm leading-relaxed text-slate-500">
                   {body}
                 </p>
               </div>

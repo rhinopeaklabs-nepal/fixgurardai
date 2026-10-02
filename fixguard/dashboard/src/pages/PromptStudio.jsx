@@ -358,7 +358,7 @@ function Result({ result, onCopy, copied }) {
             {copied ? "Copied" : "Copy for AI Builder"}
           </button>
         </div>
-        <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg bg-slate-900 p-4 font-mono text-xs leading-relaxed text-slate-100">
+        <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg bg-console p-4 font-mono text-xs leading-relaxed text-console-ink">
 {result.prompt}
         </pre>
       </div>
@@ -629,7 +629,7 @@ function FixList({ data, onCopy, copiedId }) {
                 >
                   {copiedId === f.id ? "Copied" : "Copy for AI Builder"}
                 </button>
-                <pre className="mt-2 overflow-x-auto whitespace-pre-wrap rounded-lg bg-slate-900 p-4 font-mono text-[11px] leading-relaxed text-slate-100">
+                <pre className="mt-2 overflow-x-auto whitespace-pre-wrap rounded-lg bg-console p-4 font-mono text-[11px] leading-relaxed text-console-ink">
 {f.prompt}
                 </pre>
               </>

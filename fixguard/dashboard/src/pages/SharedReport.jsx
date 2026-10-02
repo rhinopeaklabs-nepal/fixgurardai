@@ -338,12 +338,12 @@ function TechnicalDetail({ report }) {
         <Panel title={`Console output (${errors.length})`}>
           <div className="space-y-2 p-3">
             {errors.map((c, i) => (
-              <div key={i} className="rounded-lg bg-slate-900 px-3 py-2">
-                <p className="break-all font-mono text-[11px] leading-relaxed text-slate-200">
+              <div key={i} className="rounded-lg bg-console px-3 py-2">
+                <p className="break-all font-mono text-[11px] leading-relaxed text-console-ink">
                   {c.message}
                 </p>
                 {c.source_url && (
-                  <p className="mt-1 truncate font-mono text-[10px] text-slate-300">
+                  <p className="mt-1 truncate font-mono text-[10px] text-console-muted">
                     {c.source_url}
                     {c.line ? `:${c.line}` : ""}
                   </p>
